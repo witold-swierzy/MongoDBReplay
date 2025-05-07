@@ -2,17 +2,15 @@ package utils.dbutils;
 
 import com.google.gson.*;
 
-
 import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.List;
 
 public class Config {
     public static String inputFile;
     public static String outputDir;
     public static JsonArray dbNames;
+    public static boolean commandsLogging;
 
     public static boolean containsDbName(String dbName) {
         return  dbNames.contains(new JsonParser().parse(dbName));
@@ -25,6 +23,7 @@ public class Config {
             inputFile = configObject.getAsJsonPrimitive("INPUT_FILE").getAsString();
             outputDir = configObject.getAsJsonPrimitive("OUTPUT_DIR").getAsString();
             dbNames = configObject.getAsJsonArray("DB_NAMES");
+            commandsLogging = configObject.getAsJsonPrimitive("COMMANDS_LOGGING").getAsBoolean();
             reader.close();
         }
         catch (Exception e) {

@@ -11,7 +11,6 @@ import java.util.Map;
 
 public class Main {
     public static void main(String[] args) {
-
         Config.readConfiguration();
         try {
             BufferedReader bfro = new BufferedReader((new FileReader(Config.inputFile)));
@@ -41,7 +40,10 @@ public class Main {
                                             outputFiles.put(dbName,pw);
                                         }
                                         PrintWriter pw = outputFiles.get(dbName);
+                                        if (Config.commandsLogging)
+                                            pw.println("console.log('Executing "+commandObject+"')");
                                         pw.println("db.runCommand(" + commandObject + ")");
+                                        pw.println("console.log('\\n\\n\\n')");
                                     }
                                 }
                             }
@@ -53,6 +55,9 @@ public class Main {
             for (Map.Entry<String, PrintWriter> e : outputFiles.entrySet())
                 e.getValue().close();
             System.out.println("Summary : ");
+            System.out.println("Input log file                            : "+Config.inputFile);
+            System.out.println("Output directory                          : "+Config.outputDir);
+            System.out.println("Commands logging enabled                  : "+Config.commandsLogging);
             System.out.println("List of traced databases                  : "+Config.dbNames);
             System.out.println("Number of entries interpreted as commands : "+numOfCommands);
             System.out.println("Number of rejected entries                : "+numOfRejectedEntries);

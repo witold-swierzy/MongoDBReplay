@@ -45,8 +45,9 @@ Step 5.
 MongoDBReplay uses simple configuration file, which provides information about which data we want to analyse.
 Below we present a template of this JSON file
 {
-        "INPUT_FILE": "path_to_logfile_and_its_name",
-        "OUTPUT_DIR": "directory_where_output_scripts_will_be_generated",
+        "INPUT_FILE"       : "path_to_logfile_and_its_name",
+        "OUTPUT_DIR"       : "directory_where_output_scripts_will_be_generated",
+        "COMMANDS_LOGGING" : "true|false",
         "DB_NAMES"   : [list_of_mongoDB_databases_we_want_to_analyze]
 }
 
