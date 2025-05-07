@@ -54,6 +54,7 @@ public class Main {
             bfro.close();
             for (Map.Entry<String, PrintWriter> e : outputFiles.entrySet())
                 e.getValue().close();
+            System.out.println(" ");
             System.out.println("Summary : ");
             System.out.println("Input log file                            : "+Config.inputFile);
             System.out.println("Output directory                          : "+Config.outputDir);

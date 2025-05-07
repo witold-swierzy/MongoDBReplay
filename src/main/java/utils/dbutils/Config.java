@@ -2,6 +2,7 @@ package utils.dbutils;
 
 import com.google.gson.*;
 
+import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -18,16 +19,34 @@ public class Config {
 
     public static void readConfiguration() {
         try {
-            Reader reader = Files.newBufferedReader(Paths.get(System.getenv("MR_CONFIG_FILE")));
+            String configFileName = System.getenv("MR_CONFIG_FILE");
+            if ( configFileName == null || configFileName.length() ==0 )
+                throw new Exception("MR_CONFIG_FILE environment variable is mandatory. Please review the available documentation.");
+
+            Reader reader = Files.newBufferedReader(Paths.get(configFileName));
             JsonObject configObject = (new Gson()).fromJson(reader, JsonObject.class);
+
+            if (!configObject.has("INPUT_FILE"))
+                throw new Exception("INPUT_FILE paramter is mandatory. Please, review the available documentation.");
+            if (!configObject.has("OUTPUT_DIR"))
+                throw new Exception("OUPTUT_DIR parameter is mandatory. Please, review the available documentation");
+            if (!configObject.has("DB_NAMES"))
+                throw new Exception("DB_NAMES parameter is mandatory. Please, review the available documentation.");
+
             inputFile = configObject.getAsJsonPrimitive("INPUT_FILE").getAsString();
             outputDir = configObject.getAsJsonPrimitive("OUTPUT_DIR").getAsString();
             dbNames = configObject.getAsJsonArray("DB_NAMES");
-            commandsLogging = configObject.getAsJsonPrimitive("COMMANDS_LOGGING").getAsBoolean();
+
+            if (configObject.has("COMMANDS_LOGGING"))
+                commandsLogging = configObject.getAsJsonPrimitive("COMMANDS_LOGGING").getAsBoolean();
+            else
+                commandsLogging = true;
+
             reader.close();
         }
         catch (Exception e) {
             e.printStackTrace();
+            System.exit(0);
         }
     }
 }
