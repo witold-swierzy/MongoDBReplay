@@ -16,20 +16,19 @@ public class Main {
         try {
             BufferedReader bfro = new BufferedReader((new FileReader(Config.inputFile)));
             Hashtable<String, PrintWriter> outputFiles = new Hashtable<String,PrintWriter>();
-            String st;
+            String line;
             int numOfCommands = 0;
             int numOfRejectedEntries = 0;
-            while ((st = bfro.readLine()) != null) {
-                JsonObject jo;
+            while ((line = bfro.readLine()) != null) {
+                JsonObject logEntry;
                 Gson gson = new Gson();
-                jo = gson.fromJson(st, JsonObject.class);
-                if (jo.getAsJsonPrimitive("c").getAsString().equals("COMMAND"))
-                    if (jo.has("attr")) {
-                        JsonObject attr = jo.getAsJsonObject("attr");
-                        System.out.println(attr);
-                        if (attr.has("command")) {
-                            if (attr.get("command").isJsonObject()) {
-                                JsonObject commandObject = attr.getAsJsonObject("command");
+                logEntry = gson.fromJson(line, JsonObject.class);
+                if (logEntry.getAsJsonPrimitive("c").getAsString().equals("COMMAND"))
+                    if (logEntry.has("attr")) {
+                        JsonObject entryAttr = logEntry.getAsJsonObject("attr");
+                        if (entryAttr.has("command")) {
+                            if (entryAttr.get("command").isJsonObject()) {
+                                JsonObject commandObject = entryAttr.getAsJsonObject("command");
                                 String dbName = commandObject.getAsJsonPrimitive("$db").getAsString();
                                 if (Config.containsDbName(dbName)) {
                                     numOfCommands++;
@@ -47,17 +46,16 @@ public class Main {
                                 }
                             }
                         }
-                        else
-                            numOfRejectedEntries++;
+                        else numOfRejectedEntries++;
                     }
             }
             bfro.close();
             for (Map.Entry<String, PrintWriter> e : outputFiles.entrySet())
                 e.getValue().close();
             System.out.println("Summary : ");
-            System.out.println("List of traced databases : "+Config.dbNames);
+            System.out.println("List of traced databases                  : "+Config.dbNames);
             System.out.println("Number of entries interpreted as commands : "+numOfCommands);
-            System.out.println("Number of rejected entries : "+numOfRejectedEntries);
+            System.out.println("Number of rejected entries                : "+numOfRejectedEntries);
         } catch (Exception e)
         {e.printStackTrace();}
     }
