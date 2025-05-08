@@ -16,11 +16,18 @@ public class Main {
         System.out.println("Input log file                            : "+Config.inputFile);
         System.out.println("Output directory                          : "+Config.outputDir);
         System.out.println("Commands logging enabled                  : "+Config.commandsLogging);
-        System.out.println("List of traced databases                  : "+Config.dbNames);
-        if (Config.allCommands)
-            System.out.println("All commands traced.");
-        else
-            System.out.println("Commands traced                           : "+Config.commands);
+        if (Config.traceAllDbs())
+            System.out.println("All databases are traced.");
+        else if (Config.traceInclDbs())
+            System.out.println("List of traced databases                  : "+Config.includeDbs);
+        else if (Config.traceExclDbs())
+            System.out.println("List of databases, which are not traced   : "+Config.excludeDbs);
+        if (Config.traceAllCmds())
+            System.out.println("All commands are traced.");
+        else if (Config.traceInclCmds())
+            System.out.println("List of traced commands                   : "+Config.includeCmds);
+        else if (Config.traceExclCmds())
+            System.out.println("List of commands, which are not traced    : "+Config.excludeCmds);
         try {
             BufferedReader bfro = new BufferedReader((new FileReader(Config.inputFile)));
             Hashtable<String, PrintWriter> outputFiles = new Hashtable<String,PrintWriter>();
@@ -39,7 +46,7 @@ public class Main {
                             if (entryAttr.get("command").isJsonObject()) {
                                 JsonObject commandObject = entryAttr.getAsJsonObject("command");
                                 String dbName = commandObject.getAsJsonPrimitive("$db").getAsString();
-                                if (Config.containsDbName(dbName) && Config.containsCommand(commandObject)) {
+                                if (Config.traceDatabase(dbName) && Config.traceCommand(commandObject)) {
                                     numOfCommands++;
                                     System.out.println("Found Command #"+numOfCommands+" : "+commandObject);
                                     if ((commandObject.has("documents") && commandObject.get("documents").isJsonArray())||
@@ -63,18 +70,24 @@ public class Main {
             bfro.close();
             for (Map.Entry<String, PrintWriter> e : outputFiles.entrySet())
                 e.getValue().close();
-            System.out.println(" ");
-            System.out.println("Summary : ");
-            System.out.println("Input log file                            : "+Config.inputFile);
-            System.out.println("Output directory                          : "+Config.outputDir);
-            System.out.println("Commands logging enabled                  : "+Config.commandsLogging);
-            System.out.println("List of traced databases                  : "+Config.dbNames);
-            if (Config.allCommands)
-                System.out.println("All commands traced.");
-            else
-                System.out.println("Commands traced                           : "+Config.commands);
-            System.out.println("Number of entries interpreted as commands : "+numOfCommands);
-            System.out.println("Number of all entries                     : "+numOfAllEntries);
+            System.out.println("Starting analysis. ");
+            System.out.println("Input log file                                   : "+Config.inputFile);
+            System.out.println("Output directory                                 : "+Config.outputDir);
+            System.out.println("Commands logging enabled                         : "+Config.commandsLogging);
+            if (Config.traceAllDbs())
+                System.out.println("All databases are traced.");
+            else if (Config.traceInclDbs())
+                System.out.println("List of traced databases                         : "+Config.includeDbs);
+            else if (Config.traceExclDbs())
+                System.out.println("List of databases, which are not traced          : "+Config.excludeDbs);
+            if (Config.traceAllCmds())
+                System.out.println("All commands are traced.");
+            else if (Config.traceInclCmds())
+                System.out.println("List of traced commands                          : "+Config.includeCmds);
+            else if (Config.traceExclCmds())
+                System.out.println("List of commands, which are not traced           : "+Config.excludeCmds);
+            System.out.println("Number of entries interpreted as traced commands : "+numOfCommands);
+            System.out.println("Number of all entries                            : "+numOfAllEntries);
         } catch (Exception e)
         {e.printStackTrace();}
     }
