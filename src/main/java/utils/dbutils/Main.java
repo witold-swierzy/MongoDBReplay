@@ -10,9 +10,8 @@ import java.util.Hashtable;
 import java.util.Map;
 
 public class Main {
-    public static void main(String[] args) {
-        Config.readConfiguration();
-        System.out.println("Starting analysis. ");
+
+    public static void printParameters() {
         System.out.println("Input log file                            : "+Config.inputFile);
         System.out.println("Output directory                          : "+Config.outputDir);
         System.out.println("Commands logging enabled                  : "+Config.commandsLogging);
@@ -28,6 +27,13 @@ public class Main {
             System.out.println("List of traced commands                   : "+Config.includeCmds);
         else if (Config.traceExclCmds())
             System.out.println("List of commands, which are not traced    : "+Config.excludeCmds);
+    }
+
+    public static void main(String[] args) {
+        Config.readConfiguration();
+        System.out.println("Starting analysis. ");
+        printParameters();
+
         try {
             BufferedReader bfro = new BufferedReader((new FileReader(Config.inputFile)));
             Hashtable<String, PrintWriter> outputFiles = new Hashtable<String,PrintWriter>();
@@ -70,22 +76,9 @@ public class Main {
             bfro.close();
             for (Map.Entry<String, PrintWriter> e : outputFiles.entrySet())
                 e.getValue().close();
-            System.out.println("Starting analysis. ");
-            System.out.println("Input log file                                   : "+Config.inputFile);
-            System.out.println("Output directory                                 : "+Config.outputDir);
-            System.out.println("Commands logging enabled                         : "+Config.commandsLogging);
-            if (Config.traceAllDbs())
-                System.out.println("All databases are traced.");
-            else if (Config.traceInclDbs())
-                System.out.println("List of traced databases                         : "+Config.includeDbs);
-            else if (Config.traceExclDbs())
-                System.out.println("List of databases, which are not traced          : "+Config.excludeDbs);
-            if (Config.traceAllCmds())
-                System.out.println("All commands are traced.");
-            else if (Config.traceInclCmds())
-                System.out.println("List of traced commands                          : "+Config.includeCmds);
-            else if (Config.traceExclCmds())
-                System.out.println("List of commands, which are not traced           : "+Config.excludeCmds);
+            System.out.println("Analysis completed.");
+            System.out.println("Summary");
+            printParameters();
             System.out.println("Number of entries interpreted as traced commands : "+numOfCommands);
             System.out.println("Number of all entries                            : "+numOfAllEntries);
         } catch (Exception e)
