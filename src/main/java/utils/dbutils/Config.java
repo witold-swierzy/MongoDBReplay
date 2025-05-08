@@ -11,10 +11,25 @@ public class Config {
     public static String inputFile;
     public static String outputDir;
     public static JsonArray dbNames;
+    public static JsonArray commands;
+    public static boolean allCommands = false;
     public static boolean commandsLogging;
 
     public static boolean containsDbName(String dbName) {
         return  dbNames.contains(new JsonParser().parse(dbName));
+    }
+
+    public static boolean containsCommand(JsonObject command) {
+        boolean contains = false;
+        int i = 0;
+        if (allCommands)
+            contains = true;
+        else while (!contains && i < commands.asList().toArray().length){
+                if (command.has(commands.asList().get(i).getAsString()))
+                    contains = true;
+                i++;
+            }
+        return contains;
     }
 
     public static void readConfiguration() {
@@ -36,6 +51,11 @@ public class Config {
             inputFile = configObject.getAsJsonPrimitive("INPUT_FILE").getAsString();
             outputDir = configObject.getAsJsonPrimitive("OUTPUT_DIR").getAsString();
             dbNames = configObject.getAsJsonArray("DB_NAMES");
+
+            if (configObject.has("COMMANDS"))
+                commands = configObject.getAsJsonArray("COMMANDS");
+            else
+                allCommands = true;
 
             if (configObject.has("COMMANDS_LOGGING"))
                 commandsLogging = configObject.getAsJsonPrimitive("COMMANDS_LOGGING").getAsBoolean();
