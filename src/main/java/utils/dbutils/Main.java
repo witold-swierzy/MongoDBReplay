@@ -27,6 +27,16 @@ public class Main {
             System.out.println("List of traced commands                   : "+Config.includeCmds);
         else if (Config.traceExclCmds())
             System.out.println("List of commands, which are not traced    : "+Config.excludeCmds);
+        switch (Config.executionTracing) {
+            case 0: System.out.println("Execution plan tracing disabled.");
+                    break;
+            case 1: System.out.println("Execution plan tracing level              : QueryPlanner");
+                    break;
+            case 2: System.out.println("Execution plan tracing level              : ExecutionStats");
+                    break;
+            case 3: System.out.println("Execution plan tracing level              : AllPlansExecution");
+                    break;
+        }
     }
 
     public static void main(String[] args) {
@@ -62,10 +72,26 @@ public class Main {
                                             pw.println("use "+dbName);
                                             outputFiles.put(dbName,pw);
                                         }
+                                        commandObject.remove("$db");
+                                        commandObject.remove("lsid");
                                         PrintWriter pw = outputFiles.get(dbName);
-                                        if (Config.commandsLogging)
+                                        if (Config.commandsLogging && Config.executionTracing == 0)
                                             pw.println("console.log('Executing "+commandObject+"')");
-                                        pw.println("db.runCommand(" + commandObject + ")");
+                                        else if (Config.executionTracing != 0)
+                                            pw.println("console.log('Checking execution plan of "+commandObject+"')");
+                                        switch (Config.executionTracing) {
+                                            case 0:
+                                                pw.println("db.runCommand(" + commandObject + ")");
+                                                break;
+                                            case 1:
+                                                pw.println("try { db.runCommand({explain : " + commandObject + ", verbosity : 'queryPlanner'}); } catch (e) {console.error(\"Execution plan generation does not support this statement. Details: https://www.mongodb.com/docs/manual/reference/command/explain/\")}");
+                                                break;
+                                            case 2:
+                                                pw.println("try { db.runCommand({explain : " + commandObject + ", verbosity : 'executionStats'}); } catch (e) {console.error(\"Execution plan generation does not support this statement. Details: https://www.mongodb.com/docs/manual/reference/command/explain/\")}");
+                                                break;
+                                            case 3:
+                                                pw.println("try { db.runCommand({explain : " + commandObject + ", verbosity : 'allPlansExecution'}); } catch (e) {console.error(\"Execution plan generation does not support this statement. Details: https://www.mongodb.com/docs/manual/reference/command/explain/\")}");
+                                        }
                                         pw.println("console.log('\\n\\n\\n')");
                                     }
                                 }

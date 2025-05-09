@@ -13,9 +13,11 @@ public class Config {
     public static JsonArray excludeDbs;
     public static JsonArray includeCmds;
     public static JsonArray excludeCmds;
-    public static boolean allCommands = false;
     public static boolean commandsLogging;
-
+    public static int executionTracing = 0; // 0 - not tracing
+                                            // 1 - query planner
+                                            // 2 - execution stats
+                                            // 3 - allPlansExecution
     public static boolean traceAllDbs() {
         return (includeDbs == null && excludeDbs == null);
     }
@@ -110,6 +112,10 @@ public class Config {
                 commandsLogging = configObject.getAsJsonPrimitive("COMMANDS_LOGGING").getAsBoolean();
             else
                 commandsLogging = true;
+
+            if (configObject.has("EXECUTION_PLAN_TRACING")) {
+                executionTracing = configObject.getAsJsonPrimitive("EXECUTION_PLAN_TRACING").getAsInt();
+            }
 
             reader.close();
         }

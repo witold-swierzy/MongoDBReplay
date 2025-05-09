@@ -47,17 +47,25 @@ Below we present a template of this JSON file
 
 {
 
-        "INPUT_FILE"        : "path_to_logfile_and_its_name",
-        "OUTPUT_DIR"        : "directory_where_output_scripts_will_be_generated",
-        "COMMANDS_LOGGING"  : "true|false",
-        "INCLUDE_COMMANDS"  : [list_of_commands to trace],
-        "EXCLUDE_COMMANDS"  : [list_of_commands to do not trace],
-        "INCLUDE_DATABASES" : [list_of_mongoDB_databases_we_want_to_analyze],
-        "EXCLUDE_DATABASES" : [list_of_databases_we_don't_want_to_trace]
+        "INPUT_FILE"             : "path_to_logfile_and_its_name",
+        "OUTPUT_DIR"             : "directory_where_output_scripts_will_be_generated",
+        "COMMANDS_LOGGING"       : "true|false",
+        "INCLUDE_COMMANDS"       : [list_of_commands to trace],
+        "EXCLUDE_COMMANDS"       : [list_of_commands to do not trace],
+        "INCLUDE_DATABASES"      : [list_of_mongoDB_databases_we_want_to_analyze],
+        "EXCLUDE_DATABASES"      : [list_of_databases_we_don't_want_to_trace]
+        "EXECUTION_PLAN_TRACING" : 0-3
 }
 
 Note:
 Parameters INCLUDE_* and EXCLUDE_* cannot be used at the same time.
+
+Note:
+Parameter EXECUTION_PLAN_TRACING can be set to one of the following values
+0 : it is default level causing, that execution plan tracing is disable; output script will contain normaln db.runCommand statements
+1 : it is level causing, that the output script will contain explain commmands with tracing level set to "query planner" level
+2 : it is level causing, that the output script will contain explain commmands with tracing level set to "execution stats" level
+3 : it is level causing, that the output script will contain explain commmands with tracing level set to "allPlansExecution" level
 
 To provide to MongoDBReplay information about location and name of this configuration file, we need to set the following environment variable
   export MR_CONFIG_FILE=<location_and_name_of_the_configuration_file>
