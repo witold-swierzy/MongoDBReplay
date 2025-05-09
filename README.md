@@ -57,10 +57,10 @@ Below we present a template of this JSON file
         "EXECUTION_PLAN_TRACING" : 0-3
 }
 
-Note:
+###Note 1:
 Parameters INCLUDE_* and EXCLUDE_* cannot be used at the same time.
 
-Note:
+###Note 2:
 Parameter EXECUTION_PLAN_TRACING can be set to one of the following values
 0 : it is default level causing, that execution plan tracing is disable; output script will contain normaln db.runCommand statements
 1 : it is level causing, that the output script will contain explain commmands with tracing level set to "query planner" level
@@ -80,9 +80,21 @@ Every output file contains commands executed against a single one database. Thei
 
 Step 8.
 Use the files.
-The simplest way of using scripts generated in Step 7 is to run them in mongosh tool.
-example:
-  mongosh 'mongo_connection_details' < test.js
-or (to generate an output file) 
-  mongosh 'mongo_connection_details' < test.js > output.log 2&>1
-  
+#1 The simplest way of using scripts generated in Step 7 is to run them in mongosh tool.
+   example:
+       mongosh 'mongo_connection_details' < test.js
+   or (to generate an output file) 
+       mongosh 'mongo_connection_details' < test.js > output.log 2&>1
+
+#2 When INPUT_FILE parameter is not set, the tool reads data from standard input.
+   In that case it is possible to use current MongoDB log file to reproduce commands in real-time scenario.
+   example:
+	tail -n 10000 -f /var/log/mongod.log|java -jar MongoDBReplay.jar
+
+#3 When OUTPUT_DIR parameter is not set, the tool writes data into standard output. 
+   In that case it is possible to use it in the following way
+        tail -n 10000 -f /var/log/mongod.log|java -jar MongoDBReplay.jar 1>./operations.js 2>./log.txt
+
+   Also in case when both above parameters are not set it is possible to use this tool to replicate commands between
+   - two MongoDB/Oracle API for MongoDB instances:
+   	tail -n 10000 -f /var/log/mongod.log|java -jar MongoDBReplay.jar|mongosh 'connection_details'

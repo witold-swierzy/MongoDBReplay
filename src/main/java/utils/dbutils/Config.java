@@ -83,11 +83,11 @@ public class Config {
             Reader reader = Files.newBufferedReader(Paths.get(configFileName));
             JsonObject configObject = (new Gson()).fromJson(reader, JsonObject.class);
 
-            if (!configObject.has("INPUT_FILE"))
-                throw new Exception("INPUT_FILE paramter is mandatory. Please, review the available documentation.");
+            if (configObject.has("INPUT_FILE"))
+                inputFile = configObject.getAsJsonPrimitive("INPUT_FILE").getAsString();
 
-            if (!configObject.has("OUTPUT_DIR"))
-                throw new Exception("OUPTUT_DIR parameter is mandatory. Please, review the available documentation");
+            if (configObject.has("OUTPUT_DIR"))
+                outputDir = configObject.getAsJsonPrimitive("OUTPUT_DIR").getAsString();
 
             if (configObject.has("INCLUDE_DATABASES") &&
                     configObject.has("EXCLUDE_DATABASES"))
@@ -96,9 +96,6 @@ public class Config {
             if (configObject.has("INCLUDE_COMMANDS") &&
                 configObject.has("EXCLUDE_COMMANDS"))
                 throw new Exception("You cannot set INCLUDE_COMMANDS and EXCLUDE_COMMANDS at the same time. Please, review the available documentation.");
-
-            inputFile = configObject.getAsJsonPrimitive("INPUT_FILE").getAsString();
-            outputDir = configObject.getAsJsonPrimitive("OUTPUT_DIR").getAsString();
 
             if (configObject.has("INCLUDE_DATABASES"))
                 includeDbs = configObject.getAsJsonArray("INCLUDE_DATABASES");
