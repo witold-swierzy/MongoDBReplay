@@ -85,8 +85,10 @@ public class Config {
 
             if (!configObject.has("INPUT_FILE"))
                 throw new Exception("INPUT_FILE paramter is mandatory. Please, review the available documentation.");
+
             if (!configObject.has("OUTPUT_DIR"))
                 throw new Exception("OUPTUT_DIR parameter is mandatory. Please, review the available documentation");
+
             if (configObject.has("INCLUDE_DATABASES") &&
                     configObject.has("EXCLUDE_DATABASES"))
                 throw new Exception("You cannot set INCLUDE_DATATABASES and EXCLUDE_DATABASES at the same time. Please, review the available documentation.");
@@ -97,8 +99,10 @@ public class Config {
 
             inputFile = configObject.getAsJsonPrimitive("INPUT_FILE").getAsString();
             outputDir = configObject.getAsJsonPrimitive("OUTPUT_DIR").getAsString();
+
             if (configObject.has("INCLUDE_DATABASES"))
                 includeDbs = configObject.getAsJsonArray("INCLUDE_DATABASES");
+
             if (configObject.has("EXCLUDE_DATABASES"))
                 excludeDbs = configObject.getAsJsonArray("EXCLUDE_DATABASES");
 
