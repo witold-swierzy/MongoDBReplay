@@ -18,6 +18,7 @@ public class Config {
                                             // 1 - query planner
                                             // 2 - execution stats
                                             // 3 - allPlansExecution
+    public static String configFileName;
     public static boolean traceAllDbs() {
         return (includeDbs == null && excludeDbs == null);
     }
@@ -76,7 +77,7 @@ public class Config {
 
     public static void readConfiguration() {
         try {
-            String configFileName = System.getenv("MR_CONFIG_FILE");
+            configFileName = System.getenv("MR_CONFIG_FILE");
             if ( configFileName == null || configFileName.length() ==0 )
                 throw new Exception("MR_CONFIG_FILE environment variable is mandatory. Please review the available documentation.");
 
@@ -85,6 +86,9 @@ public class Config {
 
             if (configObject.has("INPUT_FILE"))
                 inputFile = configObject.getAsJsonPrimitive("INPUT_FILE").getAsString();
+            else {
+                Main.t.start();
+            }
 
             if (configObject.has("OUTPUT_DIR"))
                 outputDir = configObject.getAsJsonPrimitive("OUTPUT_DIR").getAsString();

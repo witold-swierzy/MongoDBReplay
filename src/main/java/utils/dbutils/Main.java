@@ -8,14 +8,30 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.time.LocalDateTime;
 
+
 public class Main {
 
     private static String dbName    = "", oldDbName = "";
     private static int numOfCommands        = 0;
     private static int numOfAllEntries      = 0;
     private static Hashtable<String, PrintStream> outputFiles = new Hashtable<String,PrintStream>();
+    private static BufferedReader inputFile;
+    public static ManagingThread t = new ManagingThread();
+    public static int sem = 0;
 
-    public static void printParameters() {
+    public synchronized static void setSem(int newSem) {
+        while (sem == newSem);
+        sem = newSem;
+    }
+
+    public static void printSettings(boolean footer) {
+        if (!footer)
+            System.err.println(LocalDateTime.now()+" : Starting analysis. ");
+        else {
+            System.err.println(LocalDateTime.now()+" : Analysis completed.");
+            System.err.println("Summary");
+        }
+
         if (Config.inputFile != null)
             System.err.println("Input log file                            : "+Config.inputFile);
         else
@@ -46,6 +62,24 @@ public class Main {
                     break;
             case 3: System.err.println("Execution plan tracing level              : AllPlansExecution");
                     break;
+        }
+        if (footer) {
+            System.err.println("Number of entries interpreted as traced commands : "+numOfCommands);
+            System.err.println("Number of all entries                            : "+numOfAllEntries);
+        }
+    }
+
+    public synchronized static void shutdown() {
+        try {
+            setSem(1);
+            inputFile.close();
+            for (Map.Entry<String, PrintStream> e : outputFiles.entrySet())
+                e.getValue().close();
+            printSettings(true);
+            System.exit(0);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.exit(0);
         }
     }
 
@@ -93,52 +127,41 @@ public class Main {
     }
 
     public static void main(String[] args) {
-        BufferedReader bfro;
-        PrintWriter pw;
+        String line;
 
         Config.readConfiguration();
-        System.err.println(LocalDateTime.now()+" : Starting analysis. ");
-        System.err.println(LocalDateTime.now());
-        printParameters();
+        printSettings(false);
 
         try {
             if (Config.inputFile != null)
-                bfro = new BufferedReader((new FileReader(Config.inputFile)));
+                inputFile = new BufferedReader((new FileReader(Config.inputFile)));
             else
-                bfro = new BufferedReader(new InputStreamReader(System.in));
+                inputFile = new BufferedReader(new InputStreamReader(System.in));
 
-            String line;
-
-            while ((line = bfro.readLine()) != null) {
+            while ((line = inputFile.readLine()) != null) {
+                setSem(1);
                 numOfAllEntries++;
                 JsonObject logEntry;
                 Gson gson = new Gson();
                 logEntry = gson.fromJson(line, JsonObject.class);
-                if (logEntry.getAsJsonPrimitive("c").getAsString().equals("COMMAND"))
-                    if (logEntry.has("attr")) {
+                if (logEntry != null &&
+                    logEntry.getAsJsonPrimitive("c").getAsString().equals("COMMAND") &&
+                    logEntry.has("attr")) {
                         JsonObject entryAttr = logEntry.getAsJsonObject("attr");
-                        if (entryAttr.has("command")) {
-                            if (entryAttr.get("command").isJsonObject()) {
+                        if (entryAttr.has("command") && entryAttr.get("command").isJsonObject()) {
                                 JsonObject commandObject = entryAttr.getAsJsonObject("command");
                                 dbName = commandObject.getAsJsonPrimitive("$db").getAsString();
-                                if (Config.traceDatabase(dbName) && Config.traceCommand(commandObject)) {
-                                    if ((commandObject.has("documents") && commandObject.get("documents").isJsonArray())||
-                                        (!commandObject.has("documents"))) {
-                                        logCommand(dbName,commandObject);
-                                    }
-                                }
-                            }
+                                if ((Config.traceDatabase(dbName) &&
+                                    Config.traceCommand(commandObject)) &&
+                                     ((commandObject.has("documents") &&
+                                       commandObject.get("documents").isJsonArray())||
+                                      (!commandObject.has("documents"))))
+                                            logCommand(dbName,commandObject);
                         }
-                    }
+                }
+                setSem(0);
             }
-            bfro.close();
-            for (Map.Entry<String, PrintStream> e : outputFiles.entrySet())
-                e.getValue().close();
-            System.err.println(LocalDateTime.now()+" : Analysis completed.");
-            System.err.println("Summary");
-            printParameters();
-            System.err.println("Number of entries interpreted as traced commands : "+numOfCommands);
-            System.err.println("Number of all entries                            : "+numOfAllEntries);
+            shutdown();
         } catch (Exception e)
         {e.printStackTrace();}
     }

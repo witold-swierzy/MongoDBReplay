@@ -98,3 +98,7 @@ Use the files.
    Also in case when both above parameters are not set it is possible to use this tool to replicate commands between
    - two MongoDB/Oracle API for MongoDB instances:
    	tail -n 10000 -f /var/log/mongod.log|java -jar MongoDBReplay.jar|mongosh 'connection_details'
+
+In case, when an input file is not provided (i.e. MongoDBReplay consumes data stream coming from standard input)
+to shutdown the process there is need to create config.json.shutdown file in the directory pointed by MR_CONFIG_FILE variable.
+Such way of shutting down causes that MongoDBReplay releases all resources, flushes all output files and closes them correctly.
