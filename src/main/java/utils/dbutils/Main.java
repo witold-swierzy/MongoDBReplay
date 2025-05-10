@@ -20,7 +20,6 @@ public class Main {
     public static int sem = 0;
 
     public synchronized static void setSem(int newSem) {
-        while (sem == newSem);
         sem = newSem;
     }
 
@@ -71,6 +70,7 @@ public class Main {
 
     public synchronized static void shutdown() {
         try {
+            while(sem==1);
             setSem(1);
             inputFile.close();
             for (Map.Entry<String, PrintStream> e : outputFiles.entrySet())
@@ -139,6 +139,7 @@ public class Main {
                 inputFile = new BufferedReader(new InputStreamReader(System.in));
 
             while ((line = inputFile.readLine()) != null) {
+                while(sem==1);
                 setSem(1);
                 numOfAllEntries++;
                 JsonObject logEntry;
