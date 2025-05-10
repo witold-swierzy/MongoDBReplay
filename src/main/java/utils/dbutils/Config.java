@@ -2,12 +2,17 @@ package utils.dbutils;
 
 import com.google.gson.*;
 
+import java.io.File;
 import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
 public class Config {
-    public static String inputFile;
+    public static String configDir;
+    public static String inputFileName;
+    public static String configFileName;
+    public static String logFileName;
+    public static String shutdownFileName;
     public static String outputDir;
     public static JsonArray includeDbs;
     public static JsonArray excludeDbs;
@@ -18,7 +23,7 @@ public class Config {
                                             // 1 - query planner
                                             // 2 - execution stats
                                             // 3 - allPlansExecution
-    public static String configFileName;
+
     public static boolean traceAllDbs() {
         return (includeDbs == null && excludeDbs == null);
     }
@@ -77,15 +82,18 @@ public class Config {
 
     public static void readConfiguration() {
         try {
-            configFileName = System.getenv("MR_CONFIG_FILE");
-            if ( configFileName == null || configFileName.length() ==0 )
-                throw new Exception("MR_CONFIG_FILE environment variable is mandatory. Please review the available documentation.");
+            configDir = System.getenv("MR_CONFIG_DIR");
+            if ( configDir == null || configDir.length() ==0 )
+                throw new Exception("MR_CONFIG_DIR environment variable is mandatory. Please review the available documentation.");
+            configFileName   = configDir + File.separator + "MongoReplayConfig.json";
+            logFileName      = configDir + File.separator + "MongoReplay.log";
+            shutdownFileName = configDir + File.separator + "MongoReplayShutdown.label";
 
             Reader reader = Files.newBufferedReader(Paths.get(configFileName));
             JsonObject configObject = (new Gson()).fromJson(reader, JsonObject.class);
 
             if (configObject.has("INPUT_FILE"))
-                inputFile = configObject.getAsJsonPrimitive("INPUT_FILE").getAsString();
+                inputFileName = configObject.getAsJsonPrimitive("INPUT_FILE").getAsString();
             else {
                 Main.t.start();
             }

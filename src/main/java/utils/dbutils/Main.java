@@ -31,8 +31,8 @@ public class Main {
             System.err.println("Summary");
         }
 
-        if (Config.inputFile != null)
-            System.err.println("Input log file                            : "+Config.inputFile);
+        if (Config.inputFileName != null)
+            System.err.println("Input log file                            : "+Config.inputFileName);
         else
             System.err.println("Input set to StdIn.");
         if (Config.outputDir != null)
@@ -133,8 +133,8 @@ public class Main {
         printSettings(false);
 
         try {
-            if (Config.inputFile != null)
-                inputFile = new BufferedReader((new FileReader(Config.inputFile)));
+            if (Config.inputFileName != null)
+                inputFile = new BufferedReader((new FileReader(Config.inputFileName)));
             else
                 inputFile = new BufferedReader(new InputStreamReader(System.in));
 

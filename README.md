@@ -41,9 +41,15 @@ By default MongoDB generates the following log file:
 /var/log/mongodb/mongod.log
 
 Step 5.
-MongoDBReplay uses simple configuration file, which provides information about which data we want to analyse.
-Below we present a template of this JSON file
+To use MongoDBReplay there is need to set the following environment variable
+	MR_CONFIG_DIR 
+to the directory, which will contain the following files
+- MongoReplayConfig.json: this is the main configuration file, see the template presented below
+- MongoReplay.log file: this file is generated only when MongoDBReplay works in pipeline mode (see explanations provided in next points)
+- MongoReplayShutdown.label: (only in pipeline mode): this file is used to shutdown the replication process (see explanations provided in next points)
 
+Step 6.
+Template of MongoReplayConfig.json configuration file
 
 {
 
@@ -67,14 +73,12 @@ Parameter EXECUTION_PLAN_TRACING can be set to one of the following values
 2 : it is level causing, that the output script will contain explain commmands with tracing level set to "execution stats" level
 3 : it is level causing, that the output script will contain explain commmands with tracing level set to "allPlansExecution" level
 
-To provide to MongoDBReplay information about location and name of this configuration file, we need to set the following environment variable
-  export MR_CONFIG_FILE=<location_and_name_of_the_configuration_file>
 
-Step 6.
+Step 7.
 Run the MongoReplayTool.
 This tool has been developed using Oracle JDK 21, so we should use this or newer version of JDK to compile and run MongoReplay
 
-Step 7.
+Step 8.
 MongoReplay generates set of output files in the directory pointed by OUTPUT_DIR parameter (see point 5).
 Every output file contains commands executed against a single one database. Their names can be provided in DB_NAMES parameter
 
@@ -100,5 +104,5 @@ Use the files.
    	tail -n 10000 -f /var/log/mongod.log|java -jar MongoDBReplay.jar|mongosh 'connection_details'
 
 In case, when an input file is not provided (i.e. MongoDBReplay consumes data stream coming from standard input)
-to shutdown the process there is need to create config.json.shutdown file in the directory pointed by MR_CONFIG_FILE variable.
+to shutdown the process there is need to create MongoReplayShutdown.label file in the directory pointed by MR_CONFIG_DIR variable.
 Such way of shutting down causes that MongoDBReplay releases all resources, flushes all output files and closes them correctly.

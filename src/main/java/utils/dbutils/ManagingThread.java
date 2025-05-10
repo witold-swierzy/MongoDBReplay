@@ -8,11 +8,11 @@ public class ManagingThread extends Thread {
     public void run() {
         PrintStream ps1;
         try {
-            ps1 = new PrintStream(new FileOutputStream(Config.configFileName+".Thread.log"),true);
+            ps1 = new PrintStream(new FileOutputStream(Config.logFileName),true);
             while (true) {
                 Thread.sleep(1000);
-                if (Files.exists(Paths.get(Config.configFileName + ".shutdown"))) {
-                    Files.delete(Paths.get(Config.configFileName + ".shutdown"));
+                if (Files.exists(Paths.get(Config.shutdownFileName))) {
+                    Files.delete(Paths.get(Config.shutdownFileName));
                     ps1.println("Shutting down MongoDB Replay instance.");
                     ps1.close();
                     Main.shutdown();
