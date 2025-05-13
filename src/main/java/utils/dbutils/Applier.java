@@ -3,9 +3,13 @@ package utils.dbutils;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.mongodb.ConnectionString;
+import com.mongodb.MongoClientSettings;
+import com.mongodb.ServerApi;
+import com.mongodb.ServerApiVersion;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.MongoIterable;
 import org.bson.BsonDocument;
 import org.bson.Document;
 
@@ -48,15 +52,14 @@ public class Applier {
         }
     }
 
-    public static void initialize() {
-        try {
+    public static void initialize() throws Exception  {
             Config.readConfiguration(Config.APPLY);
             if (Config.logFileName != null)
                 logFile = new PrintStream(new FileOutputStream(Config.logFileName), true);
             else
                 logFile = System.err;
             printSettings(false);
-            client = MongoClients.create(new ConnectionString(Config.connectString));
+            client = MongoClients.create(Config.connectString);
             db     = client.getDatabase(Config.dbName);
             if (Config.inputFileName != null)
                 inputFile = new BufferedReader((new FileReader(Config.inputFileName)));
@@ -64,10 +67,6 @@ public class Applier {
                 inputFile = new BufferedReader(new InputStreamReader(System.in));
             dbName = Config.dbName;
             oldDbname = Config.dbName;
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.exit(0);
-        }
     }
 
     public static synchronized void shutdown() {
@@ -86,8 +85,9 @@ public class Applier {
         BsonDocument commandBSON;
         Document commandResult;
 
-        initialize();
+
         try {
+            initialize();
             while ((line = inputFile.readLine()) != null) {
                 numOfAllCommands++;
                 try {
