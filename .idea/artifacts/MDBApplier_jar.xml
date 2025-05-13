@@ -1,0 +1,14 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="MDBApplier:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/MDBApplier_jar</output-path>
+    <root id="archive" name="MDBApplier.jar">
+      <element id="module-output" name="MongoDBReplay" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/com/google/errorprone/error_prone_annotations/2.38.0/error_prone_annotations-2.38.0.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/mongodb/bson-record-codec/5.5.0/bson-record-codec-5.5.0.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/mongodb/mongodb-driver-sync/5.5.0/mongodb-driver-sync-5.5.0.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/mongodb/mongodb-driver-core/5.5.0/mongodb-driver-core-5.5.0.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/com/google/code/gson/gson/2.13.1/gson-2.13.1.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/mongodb/bson/5.5.0/bson-5.5.0.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>

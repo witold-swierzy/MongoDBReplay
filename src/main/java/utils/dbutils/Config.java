@@ -8,6 +8,10 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 public class Config {
+    public static final int EXTRACT=1;
+    public static final int APPLY=2;
+
+    public static int runningMode;
     public static String configDir;
     public static String inputFileName;
     public static String configFileName;
@@ -19,10 +23,18 @@ public class Config {
     public static JsonArray includeCmds;
     public static JsonArray excludeCmds;
     public static boolean commandsLogging;
+    public static String connectString;
+    public static String dbName;
+    public static int outputMode = 0; // 0 - mongosh script, default
+                                      // 1 - json
+
     public static int executionTracing = 0; // 0 - not tracing
                                             // 1 - query planner
                                             // 2 - execution stats
                                             // 3 - allPlansExecution
+    public static ManagingThread t = new ManagingThread();
+    private static Reader reader;
+    private static JsonObject configObject;
 
     public static boolean traceAllDbs() {
         return (includeDbs == null && excludeDbs == null);
@@ -80,33 +92,20 @@ public class Config {
         return contains;
     }
 
-    public static void readConfiguration() {
+    public static void readExtractConfiguration() {
         try {
-            configDir = System.getenv("MR_CONFIG_DIR");
-            if ( configDir == null || configDir.length() ==0 )
-                throw new Exception("MR_CONFIG_DIR environment variable is mandatory. Please review the available documentation.");
-            configFileName   = configDir + File.separator + "MongoReplayConfig.json";
-            logFileName      = configDir + File.separator + "MongoReplay.log";
-            shutdownFileName = configDir + File.separator + "MongoReplayShutdown.label";
-
-            Reader reader = Files.newBufferedReader(Paths.get(configFileName));
-            JsonObject configObject = (new Gson()).fromJson(reader, JsonObject.class);
 
             if (configObject.has("INPUT_FILE"))
                 inputFileName = configObject.getAsJsonPrimitive("INPUT_FILE").getAsString();
-            else {
-                Main.t.start();
-            }
+            else
+                t.start();
 
             if (configObject.has("OUTPUT_DIR"))
                 outputDir = configObject.getAsJsonPrimitive("OUTPUT_DIR").getAsString();
 
-            if (configObject.has("INCLUDE_DATABASES") &&
-                    configObject.has("EXCLUDE_DATABASES"))
-                throw new Exception("You cannot set INCLUDE_DATATABASES and EXCLUDE_DATABASES at the same time. Please, review the available documentation.");
 
             if (configObject.has("INCLUDE_COMMANDS") &&
-                configObject.has("EXCLUDE_COMMANDS"))
+                    configObject.has("EXCLUDE_COMMANDS"))
                 throw new Exception("You cannot set INCLUDE_COMMANDS and EXCLUDE_COMMANDS at the same time. Please, review the available documentation.");
 
             if (configObject.has("INCLUDE_DATABASES"))
@@ -126,13 +125,77 @@ public class Config {
             else
                 commandsLogging = true;
 
-            if (configObject.has("EXECUTION_PLAN_TRACING")) {
+            if (configObject.has("EXECUTION_PLAN_TRACING"))
                 executionTracing = configObject.getAsJsonPrimitive("EXECUTION_PLAN_TRACING").getAsInt();
+
+            if (configObject.has("OUTPUT_MODE")) {
+                if ( configObject.getAsJsonPrimitive("OUTPUT_MODE").getAsString().equals("SCRIPT"))
+                    outputMode = 0;
+                else if (configObject.getAsJsonPrimitive("OUTPUT_MODE").getAsString().equals("JSON"))
+                    outputMode = 1;
+                else throw new Exception("OUTPUT_MODE can be set to SCRIPT or JSON values only");
+            }
+            else
+                outputMode = 0;
+
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.exit(0);
+        }
+    }
+
+    public static void readApplyConfiguration() {
+        try {
+            if (configObject.has("CONNECT_STRING"))
+                connectString = configObject.getAsJsonPrimitive("CONNECT_STRING").getAsString();
+            else throw new Exception("CONNECT_STRING parameter is mandatory.");
+
+            if (configObject.has("DB_NAME"))
+                dbName = configObject.getAsJsonPrimitive("DB_NAME").getAsString();
+            else throw new Exception("DB_NAME parameter is mandatory.");
+
+            if (configObject.has("INPUT_FILE"))
+                inputFileName = configObject.getAsJsonPrimitive("INPUT_FILE").getAsString();
+            else
+                t.start();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.exit(0);
+        }
+    }
+
+    public static void readConfiguration(int mode) {
+        try {
+            runningMode = mode;
+            configDir = System.getenv("MR_CONFIG_DIR");
+            if (configDir == null || configDir.length() == 0)
+                throw new Exception("MR_CONFIG_DIR environment variable is mandatory. Please review the available documentation.");
+
+            if (mode == EXTRACT) {
+                configFileName = configDir + File.separator + "MDBExtractConfig.json";
+                shutdownFileName = configDir + File.separator + "MDBExtract.label";
+            }
+            else {
+                configFileName = configDir + File.separator + "MDBApplyConfig.json";
+                shutdownFileName = configDir + File.separator + "MDBApply.label";
             }
 
+            reader = Files.newBufferedReader(Paths.get(configFileName));
+            configObject = (new Gson()).fromJson(reader, JsonObject.class);
+
+            if (configObject.has("LOG_FILE"))
+                logFileName = configObject.getAsJsonPrimitive("LOG_FILE").getAsString();
+
+            if (mode == EXTRACT)
+                readExtractConfiguration();
+            else
+                readApplyConfiguration();
+
             reader.close();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
             System.exit(0);
         }
