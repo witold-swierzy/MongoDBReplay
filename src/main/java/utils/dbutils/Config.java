@@ -3,6 +3,8 @@ package utils.dbutils;
 import com.google.gson.*;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.PrintStream;
 import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -15,6 +17,7 @@ public class Config {
     public static String configDir;
     public static String inputFileName;
     public static String configFileName;
+    public static PrintStream logFile;
     public static String logFileName;
     public static String shutdownFileName;
     public static String outputDir;
@@ -186,8 +189,12 @@ public class Config {
             reader = Files.newBufferedReader(Paths.get(configFileName));
             configObject = (new Gson()).fromJson(reader, JsonObject.class);
 
-            if (configObject.has("LOG_FILE"))
+            if (configObject.has("LOG_FILE")) {
                 logFileName = configObject.getAsJsonPrimitive("LOG_FILE").getAsString();
+                logFile = new PrintStream(new FileOutputStream(Config.logFileName), true);
+            }
+            else
+                logFile = System.err;
 
             if (mode == EXTRACT)
                 readExtractConfiguration();
@@ -199,5 +206,9 @@ public class Config {
             e.printStackTrace();
             System.exit(0);
         }
+    }
+
+    public static void logMessage(String message) {
+        logFile.println(message);
     }
 }

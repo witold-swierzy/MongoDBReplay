@@ -21,43 +21,39 @@ public class Applier {
     private static int numOfErrors       = 0;
     private static int numOfAllCommands  = 0;
     private static String dbName, oldDbname;
-    private static PrintStream logFile;
+    //private static PrintStream logFile;
     private static MongoClient client;
     private static MongoDatabase db;
     private static BufferedReader inputFile;
 
     public static void printSettings(boolean footer) {
         if (!footer)
-            logFile.println(LocalDateTime.now() + " : Starting commands application. ");
+            Config.logMessage(LocalDateTime.now() + " : Starting commands application. ");
         else {
-            logFile.println(LocalDateTime.now() + " : Commands application completed.");
-            logFile.println("Summary");
+            Config.logMessage(LocalDateTime.now() + " : Commands application completed.");
+            Config.logMessage("Summary");
         }
 
         if (Config.inputFileName != null)
-            logFile.println("Input file              : " + Config.inputFileName);
+            Config.logMessage("Input file              : " + Config.inputFileName);
         else
-            logFile.println("Input redirected to StdIn");
+            Config.logMessage("Input redirected to StdIn");
 
         if (Config.logFileName != null)
-            logFile.println("Log file                : " + Config.logFileName);
+            Config.logMessage("Log file                : " + Config.logFileName);
         else
-            logFile.println("Logging set to StdOut.");
+            Config.logMessage("Logging set to StdOut.");
         System.out.println("Database connect string : "+Config.connectString);
         if (footer)
         {
-            logFile.println("Number of all commands          : " + numOfAllCommands);
-            logFile.println("Number of successful executions : " + numOfSucceses);
-            logFile.println("Number of errors                : " + numOfErrors);
+            Config.logMessage("Number of all commands          : " + numOfAllCommands);
+            Config.logMessage("Number of successful executions : " + numOfSucceses);
+            Config.logMessage("Number of errors                : " + numOfErrors);
         }
     }
 
     public static void initialize() throws Exception  {
             Config.readConfiguration(Config.APPLY);
-            if (Config.logFileName != null)
-                logFile = new PrintStream(new FileOutputStream(Config.logFileName), true);
-            else
-                logFile = System.err;
             printSettings(false);
             client = MongoClients.create(Config.connectString);
             db     = client.getDatabase(Config.dbName);
@@ -72,7 +68,7 @@ public class Applier {
     public static synchronized void shutdown() {
             try {
                 printSettings(true);
-                logFile.close();
+                Config.logFile.close();
             } catch (Exception e) {
                 e.printStackTrace();
                 System.exit(0);
@@ -91,7 +87,7 @@ public class Applier {
             while ((line = inputFile.readLine()) != null) {
                 numOfAllCommands++;
                 try {
-                    logFile.println("Command #"+numOfAllCommands+" : "+line);
+                    Config.logMessage("Command #"+numOfAllCommands+" : "+line);
                     Gson gson = new Gson();
                     commandJSON = gson.fromJson(line, JsonObject.class);
                     dbName = commandJSON.getAsJsonPrimitive("$db").getAsString();
@@ -102,11 +98,11 @@ public class Applier {
                     commandJSON.remove("$db");
                     commandBSON = BsonDocument.parse(commandJSON.toString());
                     commandResult = db.runCommand(commandBSON);
-                    logFile.println("Result : "+commandResult.toString().substring(8));
+                    Config.logMessage("Result : "+commandResult.toString().substring(8));
                     numOfSucceses++;
                 } catch(Exception e) {
                     numOfErrors++;
-                    logFile.println(e);
+                    Config.logMessage(e.toString());
                 }
             }
         } catch (Exception e)

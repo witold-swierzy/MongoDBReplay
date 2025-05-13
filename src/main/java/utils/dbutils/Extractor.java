@@ -16,7 +16,7 @@ public class Extractor {
     private static int numOfAllEntries      = 0;
     private static Hashtable<String, PrintStream> outputFiles = new Hashtable<String,PrintStream>();
     private static BufferedReader inputFile;
-    private static PrintStream logFile;
+    //private static PrintStream logFile;
     public static int sem = 0;
 
     public synchronized static void setSem(int newSem) {
@@ -25,46 +25,46 @@ public class Extractor {
 
     public static void printSettings(boolean footer) {
         if (!footer)
-            logFile.println(LocalDateTime.now()+" : Starting analysis. ");
+            Config.logMessage(LocalDateTime.now()+" : Starting analysis. ");
         else {
-            logFile.println(LocalDateTime.now()+" : Analysis completed.");
-            logFile.println("Summary");
+            Config.logMessage(LocalDateTime.now()+" : Analysis completed.");
+            Config.logMessage("Summary");
         }
 
         if (Config.inputFileName != null)
-            logFile.println("Input log file                            : "+Config.inputFileName);
+            Config.logMessage("Input log file                            : "+Config.inputFileName);
         else
-            logFile.println("Input set to StdIn.");
+            Config.logMessage("Input set to StdIn.");
         if (Config.outputDir != null)
-            logFile.println("Output directory                          : "+Config.outputDir);
+            Config.logMessage("Output directory                          : "+Config.outputDir);
         else
-            logFile.println("Output set to StdOut.");
+            Config.logMessage("Output set to StdOut.");
         System.err.println("Commands logging enabled                  : "+Config.commandsLogging);
         if (Config.traceAllDbs())
-            logFile.println("All databases are traced.");
+            Config.logMessage("All databases are traced.");
         else if (Config.traceInclDbs())
-            logFile.println("List of traced databases                  : "+Config.includeDbs);
+            Config.logMessage("List of traced databases                  : "+Config.includeDbs);
         else if (Config.traceExclDbs())
-            logFile.println("List of databases, which are not traced   : "+Config.excludeDbs);
+            Config.logMessage("List of databases, which are not traced   : "+Config.excludeDbs);
         if (Config.traceAllCmds())
-            logFile.println("All commands are traced.");
+            Config.logMessage("All commands are traced.");
         else if (Config.traceInclCmds())
-            logFile.println("List of traced commands                   : "+Config.includeCmds);
+            Config.logMessage("List of traced commands                   : "+Config.includeCmds);
         else if (Config.traceExclCmds())
-            logFile.println("List of commands, which are not traced    : "+Config.excludeCmds);
+            Config.logMessage("List of commands, which are not traced    : "+Config.excludeCmds);
         switch (Config.executionTracing) {
-            case 0: logFile.println("Execution plan tracing disabled.");
+            case 0: Config.logMessage("Execution plan tracing disabled.");
                     break;
-            case 1: logFile.println("Execution plan tracing level              : QueryPlanner");
+            case 1: Config.logMessage("Execution plan tracing level              : QueryPlanner");
                     break;
-            case 2: logFile.println("Execution plan tracing level              : ExecutionStats");
+            case 2: Config.logMessage("Execution plan tracing level              : ExecutionStats");
                     break;
-            case 3: logFile.println("Execution plan tracing level              : AllPlansExecution");
+            case 3: Config.logMessage("Execution plan tracing level              : AllPlansExecution");
                     break;
         }
         if (footer) {
-            logFile.println("Number of entries interpreted as traced commands : "+numOfCommands);
-            logFile.println("Number of all entries                            : "+numOfAllEntries);
+            Config.logMessage("Number of entries interpreted as traced commands : "+numOfCommands);
+            Config.logMessage("Number of all entries                            : "+numOfAllEntries);
         }
     }
 
@@ -76,6 +76,7 @@ public class Extractor {
             for (Map.Entry<String, PrintStream> e : outputFiles.entrySet())
                 e.getValue().close();
             printSettings(true);
+            Config.logFile.close();
             System.exit(0);
         } catch (Exception e) {
             e.printStackTrace();
@@ -86,12 +87,9 @@ public class Extractor {
     public static void logCommand(String dbName, JsonObject commandObject) throws Exception {
         PrintStream ps;
 
-        //commandObject.remove("$db");
         commandObject.remove("lsid");
-
         numOfCommands++;
-
-        logFile.println("Command #"+numOfCommands+" : "+commandObject);
+        Config.logMessage("Command #"+numOfCommands+" : "+commandObject);
 
         if (Config.outputDir != null && !outputFiles.containsKey(dbName) ) {
             if (Config.outputMode == 0) {
@@ -150,31 +148,20 @@ public class Extractor {
         }
     }
 
-    public static void initialize() {
-        try {
-            Config.readConfiguration(Config.EXTRACT);
-            if (Config.inputFileName != null)
-                inputFile = new BufferedReader((new FileReader(Config.inputFileName)));
-            else
-                inputFile = new BufferedReader(new InputStreamReader(System.in));
-
-            if (Config.logFileName != null)
-                logFile = new PrintStream(new FileOutputStream(Config.logFileName), true);
-            else
-                logFile = System.err;
-            printSettings(false);
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.exit(0);
-        }
+    public static void initialize() throws Exception {
+        Config.readConfiguration(Config.EXTRACT);
+        if (Config.inputFileName != null)
+            inputFile = new BufferedReader((new FileReader(Config.inputFileName)));
+        else
+            inputFile = new BufferedReader(new InputStreamReader(System.in));
+        printSettings(false);
     }
 
     public static void main(String[] args) {
         String line;
 
-        initialize();
-
         try {
+            initialize();
             if (Config.inputFileName != null)
                 inputFile = new BufferedReader((new FileReader(Config.inputFileName)));
             else
