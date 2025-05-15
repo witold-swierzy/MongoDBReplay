@@ -2,14 +2,9 @@ package utils.dbutils;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import com.mongodb.ConnectionString;
-import com.mongodb.MongoClientSettings;
-import com.mongodb.ServerApi;
-import com.mongodb.ServerApiVersion;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.MongoIterable;
 import org.bson.BsonDocument;
 import org.bson.Document;
 
@@ -21,7 +16,6 @@ public class Applier {
     private static int numOfErrors       = 0;
     private static int numOfAllCommands  = 0;
     private static String dbName, oldDbname;
-    //private static PrintStream logFile;
     private static MongoClient client;
     private static MongoDatabase db;
     private static BufferedReader inputFile;
@@ -77,8 +71,8 @@ public class Applier {
     }
 
     public static void main(String[] args) {
-        String line;
-        JsonObject commandJSON = new JsonObject();
+        String line = "";
+        JsonObject commandJSON;
         BsonDocument commandBSON;
         Document commandResult;
 
@@ -102,8 +96,8 @@ public class Applier {
                     numOfSucceses++;
                 } catch(Exception e) {
                     numOfErrors++;
-                    Config.logMessage("Error #"+numOfErrors+" : "+commandJSON,Config.LOG_LEVEL_ERRORS);
-                    Config.logMessage(e.toString(),Config.LOG_LEVEL_ERRORS);
+                    Config.logMessage("Error #"+numOfErrors+" : "+line, Config.LOG_LEVEL_ERRORS);
+                    Config.logMessage(e.toString(), Config.LOG_LEVEL_ERRORS);
                 }
             }
         } catch (Exception e)

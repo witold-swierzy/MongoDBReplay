@@ -8,7 +8,6 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.time.LocalDateTime;
 
-
 public class Extractor {
 
     private static String dbName    = "", oldDbName = "";
@@ -16,7 +15,6 @@ public class Extractor {
     private static int numOfAllEntries      = 0;
     private static Hashtable<String, PrintStream> outputFiles = new Hashtable<String,PrintStream>();
     private static BufferedReader inputFile;
-    //private static PrintStream logFile;
     public static int sem = 0;
 
     public synchronized static void setSem(int newSem) {
