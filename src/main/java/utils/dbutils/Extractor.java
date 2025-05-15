@@ -25,46 +25,46 @@ public class Extractor {
 
     public static void printSettings(boolean footer) {
         if (!footer)
-            Config.logMessage(LocalDateTime.now()+" : Starting analysis. ");
+            Config.logMessage(LocalDateTime.now()+" : Starting analysis. ", Config.LOG_LEVEL_SUMMARY);
         else {
-            Config.logMessage(LocalDateTime.now()+" : Analysis completed.");
-            Config.logMessage("Summary");
+            Config.logMessage(LocalDateTime.now()+" : Analysis completed.", Config.LOG_LEVEL_SUMMARY);
+            Config.logMessage("Summary", Config.LOG_LEVEL_SUMMARY);
         }
 
         if (Config.inputFileName != null)
-            Config.logMessage("Input log file                            : "+Config.inputFileName);
+            Config.logMessage("Input log file                            : "+Config.inputFileName, Config.LOG_LEVEL_SUMMARY);
         else
-            Config.logMessage("Input set to StdIn.");
+            Config.logMessage("Input set to StdIn.", Config.LOG_LEVEL_SUMMARY);
         if (Config.outputDir != null)
-            Config.logMessage("Output directory                          : "+Config.outputDir);
+            Config.logMessage("Output directory                          : "+Config.outputDir, Config.LOG_LEVEL_SUMMARY);
         else
-            Config.logMessage("Output set to StdOut.");
-        System.err.println("Commands logging enabled                  : "+Config.commandsLogging);
+            Config.logMessage("Output set to StdOut.", Config.LOG_LEVEL_SUMMARY);
+        Config.logMessage("Commands logging enabled                  : "+Config.commandsLogging, Config.LOG_LEVEL_SUMMARY);
         if (Config.traceAllDbs())
-            Config.logMessage("All databases are traced.");
+            Config.logMessage("All databases are traced.", Config.LOG_LEVEL_SUMMARY);
         else if (Config.traceInclDbs())
-            Config.logMessage("List of traced databases                  : "+Config.includeDbs);
+            Config.logMessage("List of traced databases                  : "+Config.includeDbs, Config.LOG_LEVEL_SUMMARY);
         else if (Config.traceExclDbs())
-            Config.logMessage("List of databases, which are not traced   : "+Config.excludeDbs);
+            Config.logMessage("List of databases, which are not traced   : "+Config.excludeDbs, Config.LOG_LEVEL_SUMMARY);
         if (Config.traceAllCmds())
-            Config.logMessage("All commands are traced.");
+            Config.logMessage("All commands are traced.", Config.LOG_LEVEL_SUMMARY);
         else if (Config.traceInclCmds())
-            Config.logMessage("List of traced commands                   : "+Config.includeCmds);
+            Config.logMessage("List of traced commands                   : "+Config.includeCmds, Config.LOG_LEVEL_SUMMARY);
         else if (Config.traceExclCmds())
-            Config.logMessage("List of commands, which are not traced    : "+Config.excludeCmds);
+            Config.logMessage("List of commands, which are not traced    : "+Config.excludeCmds, Config.LOG_LEVEL_SUMMARY);
         switch (Config.executionTracing) {
-            case 0: Config.logMessage("Execution plan tracing disabled.");
+            case 0: Config.logMessage("Execution plan tracing disabled.", Config.LOG_LEVEL_SUMMARY);
                     break;
-            case 1: Config.logMessage("Execution plan tracing level              : QueryPlanner");
+            case 1: Config.logMessage("Execution plan tracing level              : QueryPlanner", Config.LOG_LEVEL_SUMMARY);
                     break;
-            case 2: Config.logMessage("Execution plan tracing level              : ExecutionStats");
+            case 2: Config.logMessage("Execution plan tracing level              : ExecutionStats", Config.LOG_LEVEL_SUMMARY);
                     break;
-            case 3: Config.logMessage("Execution plan tracing level              : AllPlansExecution");
+            case 3: Config.logMessage("Execution plan tracing level              : AllPlansExecution", Config.LOG_LEVEL_SUMMARY);
                     break;
         }
         if (footer) {
-            Config.logMessage("Number of entries interpreted as traced commands : "+numOfCommands);
-            Config.logMessage("Number of all entries                            : "+numOfAllEntries);
+            Config.logMessage("Number of entries interpreted as traced commands : "+numOfCommands, Config.LOG_LEVEL_SUMMARY);
+            Config.logMessage("Number of all entries                            : "+numOfAllEntries, Config.LOG_LEVEL_SUMMARY);
         }
     }
 
@@ -84,12 +84,13 @@ public class Extractor {
         }
     }
 
-    public static void logCommand(String dbName, JsonObject commandObject) throws Exception {
+    public static void generateCommand(String dbName, JsonObject commandObject) throws Exception {
+
         PrintStream ps;
 
         commandObject.remove("lsid");
         numOfCommands++;
-        Config.logMessage("Command #"+numOfCommands+" : "+commandObject);
+        Config.logMessage("Command #"+numOfCommands+" : "+commandObject, Config.LOG_LEVEL_ALL);
 
         if (Config.outputDir != null && !outputFiles.containsKey(dbName) ) {
             if (Config.outputMode == 0) {
@@ -185,7 +186,7 @@ public class Extractor {
                                      ((commandObject.has("documents") &&
                                        commandObject.get("documents").isJsonArray())||
                                       (!commandObject.has("documents"))))
-                                            logCommand(dbName,commandObject);
+                                            generateCommand(dbName,commandObject);
                         }
                 }
                 setSem(0);

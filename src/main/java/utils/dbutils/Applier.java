@@ -28,27 +28,28 @@ public class Applier {
 
     public static void printSettings(boolean footer) {
         if (!footer)
-            Config.logMessage(LocalDateTime.now() + " : Starting commands application. ");
+            Config.logMessage(LocalDateTime.now() + " : Starting commands application. ", Config.LOG_LEVEL_SUMMARY);
         else {
-            Config.logMessage(LocalDateTime.now() + " : Commands application completed.");
-            Config.logMessage("Summary");
+            Config.logMessage(LocalDateTime.now() + " : Commands application completed.", Config.LOG_LEVEL_SUMMARY);
+            Config.logMessage("Summary", Config.LOG_LEVEL_SUMMARY);
         }
 
         if (Config.inputFileName != null)
-            Config.logMessage("Input file              : " + Config.inputFileName);
+            Config.logMessage("Input file              : " + Config.inputFileName, Config.LOG_LEVEL_SUMMARY);
         else
-            Config.logMessage("Input redirected to StdIn");
+            Config.logMessage("Input redirected to StdIn", Config.LOG_LEVEL_SUMMARY);
 
         if (Config.logFileName != null)
-            Config.logMessage("Log file                : " + Config.logFileName);
+            Config.logMessage("Log file                : " + Config.logFileName, Config.LOG_LEVEL_SUMMARY);
         else
-            Config.logMessage("Logging set to StdOut.");
-        System.out.println("Database connect string : "+Config.connectString);
+            Config.logMessage("Logging set to StdOut.", Config.LOG_LEVEL_SUMMARY);
+        Config.logMessage("Log Level               : "+Config.logLevel, Config.LOG_LEVEL_SUMMARY);
+        Config.logMessage("Database connect string : "+Config.connectString, Config.LOG_LEVEL_SUMMARY);
         if (footer)
         {
-            Config.logMessage("Number of all commands          : " + numOfAllCommands);
-            Config.logMessage("Number of successful executions : " + numOfSucceses);
-            Config.logMessage("Number of errors                : " + numOfErrors);
+            Config.logMessage("Number of all commands          : " + numOfAllCommands, Config.LOG_LEVEL_SUMMARY);
+            Config.logMessage("Number of successful executions : " + numOfSucceses, Config.LOG_LEVEL_SUMMARY);
+            Config.logMessage("Number of errors                : " + numOfErrors, Config.LOG_LEVEL_SUMMARY);
         }
     }
 
@@ -77,17 +78,16 @@ public class Applier {
 
     public static void main(String[] args) {
         String line;
-        JsonObject commandJSON;
+        JsonObject commandJSON = new JsonObject();
         BsonDocument commandBSON;
         Document commandResult;
-
 
         try {
             initialize();
             while ((line = inputFile.readLine()) != null) {
                 numOfAllCommands++;
                 try {
-                    Config.logMessage("Command #"+numOfAllCommands+" : "+line);
+                    Config.logMessage("Command #"+numOfAllCommands+" : "+line, Config.LOG_LEVEL_ALL);
                     Gson gson = new Gson();
                     commandJSON = gson.fromJson(line, JsonObject.class);
                     dbName = commandJSON.getAsJsonPrimitive("$db").getAsString();
@@ -98,11 +98,12 @@ public class Applier {
                     commandJSON.remove("$db");
                     commandBSON = BsonDocument.parse(commandJSON.toString());
                     commandResult = db.runCommand(commandBSON);
-                    Config.logMessage("Result : "+commandResult.toString().substring(8));
+                    Config.logMessage("Result : "+commandResult.toString().substring(8),Config.LOG_LEVEL_ALL);
                     numOfSucceses++;
                 } catch(Exception e) {
                     numOfErrors++;
-                    Config.logMessage(e.toString());
+                    Config.logMessage("Error #"+numOfErrors+" : "+commandJSON,Config.LOG_LEVEL_ERRORS);
+                    Config.logMessage(e.toString(),Config.LOG_LEVEL_ERRORS);
                 }
             }
         } catch (Exception e)

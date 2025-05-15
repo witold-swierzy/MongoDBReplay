@@ -13,12 +13,17 @@ public class Config {
     public static final int EXTRACT=1;
     public static final int APPLY=2;
 
+    public static final int LOG_LEVEL_SUMMARY = 0;
+    public static final int LOG_LEVEL_ERRORS  = 1;
+    public static final int LOG_LEVEL_ALL     = 2;
+
     public static int runningMode;
     public static String configDir;
     public static String inputFileName;
     public static String configFileName;
     public static PrintStream logFile;
     public static String logFileName;
+    public static int logLevel = 0;
     public static String shutdownFileName;
     public static String outputDir;
     public static JsonArray includeDbs;
@@ -178,12 +183,12 @@ public class Config {
                 throw new Exception("MR_CONFIG_DIR environment variable is mandatory. Please review the available documentation.");
 
             if (mode == EXTRACT) {
-                configFileName = configDir + File.separator + "MDBExtractConfig.json";
-                shutdownFileName = configDir + File.separator + "MDBExtract.label";
+                configFileName = configDir + File.separator + "mdbecfg.json";
+                shutdownFileName = configDir + File.separator + "mdbes.label";
             }
             else {
-                configFileName = configDir + File.separator + "MDBApplyConfig.json";
-                shutdownFileName = configDir + File.separator + "MDBApply.label";
+                configFileName = configDir + File.separator + "mdbacfg.json";
+                shutdownFileName = configDir + File.separator + "mdbas.label";
             }
 
             reader = Files.newBufferedReader(Paths.get(configFileName));
@@ -195,6 +200,9 @@ public class Config {
             }
             else
                 logFile = System.err;
+
+            if (configObject.has("LOG_LEVEL"))
+                logLevel = configObject.getAsJsonPrimitive("LOG_LEVEL").getAsInt();
 
             if (mode == EXTRACT)
                 readExtractConfiguration();
@@ -208,7 +216,8 @@ public class Config {
         }
     }
 
-    public static void logMessage(String message) {
-        logFile.println(message);
+    public static void logMessage(String message, int level) {
+        if (level <= logLevel)
+            logFile.println(message);
     }
 }

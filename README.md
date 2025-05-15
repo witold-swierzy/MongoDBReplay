@@ -68,6 +68,10 @@ See [LICENSE](https://github.com/oracle-devrel/technology-engineering/blob/main/
                              consumed by mongosh
     LOG_FILE               : name of log file used by the tool; optional; if not set then all diangostic messages will be redirected to
                              standard diagnostic output
+    LOG_LEVEL              : optional; can be set to 0,1 or 2. Default value : 0
+                             0 means that only summary of initialization and processing will be logged
+                             1 means that additionally to summaries also errors will be logged
+                             2 means that additionally to summaries and errors all commands will be logged
 
     Configuration File example:
 	
@@ -99,6 +103,11 @@ See [LICENSE](https://github.com/oracle-devrel/technology-engineering/blob/main/
     CONNECT_STRING : mandatoryl; connect string to a target MongoDB or Oracle API for MongoDB instance 
     LOG_FILE       : name of log file used by the tool; optional; if not set then all diangostic messages will be redirected to
                      standard diagnostic output
+
+    LOG_LEVEL              : optional; can be set to 0,1 or 2. Default value : 0
+                             0 means that only summary of initialization and processing will be logged
+                             1 means that additionally to summaries also errors will be logged
+                             2 means that additionally to summaries and errors all commands will be logged
     	
    Configuration file example:
    {
