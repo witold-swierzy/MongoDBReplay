@@ -111,7 +111,6 @@ public class Config {
             if (configObject.has("OUTPUT_DIR"))
                 outputDir = configObject.getAsJsonPrimitive("OUTPUT_DIR").getAsString();
 
-
             if (configObject.has("INCLUDE_COMMANDS") &&
                     configObject.has("EXCLUDE_COMMANDS"))
                 throw new Exception("You cannot set INCLUDE_COMMANDS and EXCLUDE_COMMANDS at the same time. Please, review the available documentation.");
