@@ -9,10 +9,6 @@ The repository contains source code of two artifacts
 2. MDBApplier.jar
    - this is the tool, which executes commands extracted during the extraction process against an Oracle MongoDB API instance
 
-## Internal Only
-This tool has been developed for internal purposes only. 
-It should not be shared, at the current stage of development with customers.
-
 ## License
 
 Copyright (c) 2025 Oracle and/or its affiliates.
@@ -20,6 +16,13 @@ Copyright (c) 2025 Oracle and/or its affiliates.
 Licensed under the Universal Permissive License (UPL), Version 1.0.
 
 See [LICENSE](https://github.com/oracle-devrel/technology-engineering/blob/main/LICENSE) for more details.
+
+## WARNING
+#This tool has been developed for test purposes only!
+#Do not use this tool against production databases! It may drive to serious damage or complete #data loss!
+#Oracle does not guarantee and does not take responsibility of possible damages and/or data 
+#loss.
+
 
 # Usage
 1. Generic requirements
