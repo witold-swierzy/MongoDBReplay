@@ -19,7 +19,7 @@ See [LICENSE](https://github.com/oracle-devrel/technology-engineering/blob/main/
 
 ## WARNING
 #### This tool has been developed for test purposes only!
-#### Do not use this tool against production databases! It may drive to serious damage or complete #data loss! Oracle does not guarantee and does not any take responsibility of possible damages and/or data loss caused by using this tool.
+#### Do not use this tool against production databases! It may drive to serious damages of a database or complete data loss! Oracle does not guarantee and does not take any responsibility of possible problems/issues/damages/data corruptions caused by using this tool.
 
 
 ## Usage
