@@ -18,13 +18,11 @@ Licensed under the Universal Permissive License (UPL), Version 1.0.
 See [LICENSE](https://github.com/oracle-devrel/technology-engineering/blob/main/LICENSE) for more details.
 
 ## WARNING
-#This tool has been developed for test purposes only!
-#Do not use this tool against production databases! It may drive to serious damage or complete #data loss!
-#Oracle does not guarantee and does not take responsibility of possible damages and/or data 
-#loss caused by using this tool.
+#### This tool has been developed for test purposes only!
+#### Do not use this tool against production databases! It may drive to serious damages of a database or complete data loss! Oracle does not guarantee and does not take any responsibility of possible problems/issues/damages/data corruptions caused by using this tool.
 
 
-# Usage
+## Usage
 1. Generic requirements
    - MR_CONFIG_DIR variable has to be set to a directory, where configuration and log files are/will be stored
 
@@ -71,29 +69,33 @@ See [LICENSE](https://github.com/oracle-devrel/technology-engineering/blob/main/
                              consumed by mongosh
     LOG_FILE               : name of log file used by the tool; optional; if not set then all diangostic messages will be redirected to
                              standard diagnostic output
+
     LOG_LEVEL              : optional; can be set to 0,1 or 2. Default value : 0
                              0 means that only summary of initialization and processing will be logged
                              1 means that additionally to summaries also errors will be logged
                              2 means that additionally to summaries and errors all commands will be logged
 
     Configuration File example:
-	
+	```
 	{
         	"OUTPUT_DIR"             : "/opt/mongo_tests/output",
         	"INPUT_FILE"             : "/opt/mongo_tests/mongod01.log",
-        	"COMMANDS_LOGGING"       : "false",
+         	"COMMANDS_LOGGING"       : "false",
         	"INCLUDE_DATABASES"      : ["oradev","test"],
         	"EXCLUDE_COMMANDS"       : ["insert"],
         	"EXECUTION_PLAN_TRACING" : 0,
         	"OUTPUT_MODE"            : "JSON"
-	}
- 
+	} 
    examples of using the tool
-   1. java -jar ./MDBExtract.jar	    
+   1. ```
+      java -jar ./MDBExtract.jar	    
+      ```	
       this example reads data from a file pointed by INPUT_FILE parameter and generates output into set of files created in 
       OUTPUT_DIR (every traced database will use a separate output file)
 
-   2. tail -n 10000 -f ./mongod.log|java -jar ./MDBExtract.jar
+   2. ```
+      tail -n 10000 -f ./mongod.log|java -jar ./MDBExtract.jar
+      ```
       this example assumes, that INPUT_FILE parameter IS NOT SET. Instead of the tool reads data from its standard input
 
 2.MDBApplier
@@ -113,15 +115,18 @@ See [LICENSE](https://github.com/oracle-devrel/technology-engineering/blob/main/
                              2 means that additionally to summaries and errors all commands will be logged
     	
    Configuration file example:
+   ```
    {
          "INPUT_FILE"            : "/opt/mongo_tests/output/oradev.json",
          "DB_NAME"               : "test",
          "LOG_FILE"             : "/opt/mongo_tests/MDBApply.log",
          "CONNECT_STRING"        : "mongodb://mongo-oci.acompany.com/test"
    }
-  
+   ```
 examples of using applier:
-1. java -jar ./MDBApplier.jar
+1. ```
+   java -jar ./MDBApplier.jar
+   ```
    this example reads data from a file pointed by INPUT_FILE parameter and executes found commands against the database pointed by 
    CONNECT_STRING and DB_NAME
 
