@@ -35,7 +35,8 @@ public class Config {
     public static String dbName;
     public static int outputMode = 0; // 0 - mongosh script, default
                                       // 1 - json
-
+    public static int inputFileFormat = 0; // 0 - traditional MongoDB logfile
+                                           // 1 - Atlas
     public static int executionTracing = 0; // 0 - not tracing
                                             // 1 - query planner
                                             // 2 - execution stats
@@ -135,6 +136,16 @@ public class Config {
             if (configObject.has("EXECUTION_PLAN_TRACING"))
                 executionTracing = configObject.getAsJsonPrimitive("EXECUTION_PLAN_TRACING").getAsInt();
 
+            if (configObject.has("INPUT_FILE_FORMAT")) {
+                if ( configObject.getAsJsonPrimitive("INPUT_FILE_FORMAT").getAsString().equals("MONGO_LOG"))
+                        inputFileFormat = 0;
+                else if ( configObject.getAsJsonPrimitive("INPUT_FILE_FORMAT").getAsString().equals("MONGO_PROFILE"))
+                        inputFileFormat = 1;
+                else throw new Exception("INPUT_FILE_FORMAT can be set to MONGO_LOG or MONGO_PROFILE");
+            }
+            else inputFileFormat = 0;
+
+
             if (configObject.has("OUTPUT_MODE")) {
                 if ( configObject.getAsJsonPrimitive("OUTPUT_MODE").getAsString().equals("SCRIPT"))
                     outputMode = 0;
@@ -159,6 +170,7 @@ public class Config {
                 connectString = configObject.getAsJsonPrimitive("CONNECT_STRING").getAsString();
             else throw new Exception("CONNECT_STRING parameter is mandatory.");
 
+
             if (configObject.has("DB_NAME"))
                 dbName = configObject.getAsJsonPrimitive("DB_NAME").getAsString();
             else throw new Exception("DB_NAME parameter is mandatory.");
@@ -167,7 +179,6 @@ public class Config {
                 inputFileName = configObject.getAsJsonPrimitive("INPUT_FILE").getAsString();
             else
                 t.start();
-
         } catch (Exception e) {
             e.printStackTrace();
             System.exit(0);

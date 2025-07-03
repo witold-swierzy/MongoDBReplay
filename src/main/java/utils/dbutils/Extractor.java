@@ -1,8 +1,7 @@
 package utils.dbutils;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-
+import com.google.gson.*;
+import org.json.*;
 import java.io.*;
 import java.util.Hashtable;
 import java.util.Map;
@@ -33,6 +32,12 @@ public class Extractor {
             Config.logMessage("Input log file                            : "+Config.inputFileName, Config.LOG_LEVEL_SUMMARY);
         else
             Config.logMessage("Input set to StdIn.", Config.LOG_LEVEL_SUMMARY);
+
+        if (Config.inputFileFormat == 0)
+            Config.logMessage("Input file format set to                  : MongoDB", Config.LOG_LEVEL_SUMMARY);
+        else
+            Config.logMessage("Input file format set to                  : Atlas", Config.LOG_LEVEL_SUMMARY);
+
         if (Config.outputDir != null)
             Config.logMessage("Output directory                          : "+Config.outputDir, Config.LOG_LEVEL_SUMMARY);
         else
@@ -80,6 +85,71 @@ public class Extractor {
             e.printStackTrace();
             System.exit(0);
         }
+    }
+
+    public static void generateCommand (String dbName, String command) throws Exception {
+
+        PrintStream ps;
+
+        numOfCommands++;
+        Config.logMessage("Command #"+numOfCommands+" : "+command, Config.LOG_LEVEL_ALL);
+
+        if (Config.outputDir != null && !outputFiles.containsKey(dbName) ) {
+            if (Config.outputMode == 0) {
+                ps = new PrintStream(new FileOutputStream(Config.outputDir + File.separator + dbName + ".js"), true);
+                ps.println("use " + dbName);
+            } else
+                ps = new PrintStream(new FileOutputStream(Config.outputDir + File.separator + dbName + ".json"), true);
+            outputFiles.put(dbName,ps);
+        } else if (Config.outputDir != null )
+            ps = outputFiles.get(dbName);
+        else {
+            ps = System.out;
+            if (!oldDbName.equals(dbName)) {
+                ps.println("use " + dbName);
+                oldDbName = dbName;
+            }
+        }
+
+        if (Config.outputMode == 0) {
+            if (Config.commandsLogging && Config.executionTracing == 0)
+                ps.println("console.log('Executing command : " + command + "')");
+            else if (Config.commandsLogging && Config.executionTracing != 0)
+                ps.println("console.log('Generating execution plan for : " + command + "')");
+
+            switch (Config.executionTracing) {
+                case 0:
+                    ps.println("db.runCommand(" + command + ")");
+                    break;
+                case 1:
+                    ps.println("try { db.runCommand({explain : " + command + ", verbosity : 'queryPlanner'}); } catch (e) {console.error(\"Execution plan generation does not support this statement. Details: https://www.mongodb.com/docs/manual/reference/command/explain/\")}");
+                    break;
+                case 2:
+                    ps.println("try { db.runCommand({explain : " + command + ", verbosity : 'executionStats'}); } catch (e) {console.error(\"Execution plan generation does not support this statement. Details: https://www.mongodb.com/docs/manual/reference/command/explain/\")}");
+                    break;
+                case 3:
+                    ps.println("try { db.runCommand({explain : " + command + ", verbosity : 'allPlansExecution'}); } catch (e) {console.error(\"Execution plan generation does not support this statement. Details: https://www.mongodb.com/docs/manual/reference/command/explain/\")}");
+            }
+
+            if (Config.outputDir != null)
+                ps.println("console.log('\\n\\n\\n')");
+        }
+        else {
+            switch (Config.executionTracing) {
+                case 0:
+                    ps.println(command);
+                    break;
+                case 1:
+                    ps.println("{explain : " + command + ", verbosity : 'queryPlanner'}");
+                    break;
+                case 2:
+                    ps.println("{explain : " + command + ", verbosity : 'executionStats'}");
+                    break;
+                case 3:
+                    ps.println("db.runCommand({explain : " + command + ", verbosity : 'allPlansExecution'}");
+            }
+        }
+
     }
 
     public static void generateCommand(String dbName, JsonObject commandObject) throws Exception {
@@ -156,6 +226,50 @@ public class Extractor {
         printSettings(false);
     }
 
+    public static void extractLog() throws Exception {
+        String line;
+        while ((line = inputFile.readLine()) != null) {
+            while(sem==1);
+            setSem(1);
+            numOfAllEntries++;
+            JsonObject logEntry;
+            Gson gson = new Gson();
+            logEntry = gson.fromJson(line, JsonObject.class);
+            if (logEntry != null &&
+                    logEntry.getAsJsonPrimitive("c").getAsString().equals("COMMAND") &&
+                    logEntry.has("attr")) {
+                JsonObject entryAttr = logEntry.getAsJsonObject("attr");
+                if (entryAttr.has("command") && entryAttr.get("command").isJsonObject()) {
+                    JsonObject commandObject = entryAttr.getAsJsonObject("command");
+                    dbName = commandObject.getAsJsonPrimitive("$db").getAsString();
+                    if ((Config.traceDatabase(dbName) &&
+                            Config.traceCommand(commandObject)) &&
+                            ((commandObject.has("documents") &&
+                                    commandObject.get("documents").isJsonArray())||
+                                    (!commandObject.has("documents"))))
+                        generateCommand(dbName,commandObject);
+                }
+            }
+            setSem(0);
+        }
+    }
+
+    public static void extractProfile() throws Exception {
+        JsonParser parser = new JsonParser();
+        JsonElement el    = parser.parse(inputFile);
+        JsonArray   ar    = el.getAsJsonArray();
+        JsonObject  command;
+        String db = "";
+        for (int i=0; i<ar.size(); i++) {
+            numOfAllEntries++;
+            command = ar.get(i).getAsJsonObject().get("command").getAsJsonObject();
+            command.remove("$clusterTime");
+            command.remove("lsid");
+            db = command.get("$db").getAsString();
+            generateCommand(db,command);
+        }
+    }
+
     public static void main(String[] args) {
         String line;
 
@@ -165,29 +279,11 @@ public class Extractor {
                 inputFile = new BufferedReader((new FileReader(Config.inputFileName)));
             else
                 inputFile = new BufferedReader(new InputStreamReader(System.in));
-            while ((line = inputFile.readLine()) != null) {
-                while(sem==1);
-                setSem(1);
-                numOfAllEntries++;
-                JsonObject logEntry;
-                Gson gson = new Gson();
-                logEntry = gson.fromJson(line, JsonObject.class);
-                if (logEntry != null &&
-                    logEntry.getAsJsonPrimitive("c").getAsString().equals("COMMAND") &&
-                    logEntry.has("attr")) {
-                        JsonObject entryAttr = logEntry.getAsJsonObject("attr");
-                        if (entryAttr.has("command") && entryAttr.get("command").isJsonObject()) {
-                                JsonObject commandObject = entryAttr.getAsJsonObject("command");
-                                dbName = commandObject.getAsJsonPrimitive("$db").getAsString();
-                                if ((Config.traceDatabase(dbName) &&
-                                    Config.traceCommand(commandObject)) &&
-                                     ((commandObject.has("documents") &&
-                                       commandObject.get("documents").isJsonArray())||
-                                      (!commandObject.has("documents"))))
-                                            generateCommand(dbName,commandObject);
-                        }
-                }
-                setSem(0);
+            switch (Config.inputFileFormat) {
+                case 0: extractLog();
+                        break;
+                case 1: extractProfile();
+                        break;
             }
             shutdown();
         } catch (Exception e)
