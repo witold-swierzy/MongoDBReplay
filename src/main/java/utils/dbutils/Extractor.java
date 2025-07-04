@@ -1,6 +1,8 @@
 package utils.dbutils;
 
 import com.google.gson.*;
+import com.mongodb.client.*;
+import org.bson.Document;
 import org.json.*;
 import java.io.*;
 import java.util.Hashtable;
@@ -30,13 +32,20 @@ public class Extractor {
 
         if (Config.inputFileName != null)
             Config.logMessage("Input log file                            : "+Config.inputFileName, Config.LOG_LEVEL_SUMMARY);
+        else if (Config.connectString != null)
+            Config.logMessage("Input set to MongoDB server",Config.LOG_LEVEL_SUMMARY);
         else
             Config.logMessage("Input set to StdIn.", Config.LOG_LEVEL_SUMMARY);
 
         if (Config.inputFileFormat == 0)
             Config.logMessage("Input file format set to                  : MongoDB", Config.LOG_LEVEL_SUMMARY);
-        else
+        else if (Config.inputFileFormat == 1)
             Config.logMessage("Input file format set to                  : Atlas", Config.LOG_LEVEL_SUMMARY);
+        else
+            Config.logMessage("Data read directly from system.profile collection",Config.LOG_LEVEL_SUMMARY);
+
+        if (Config.dbName != null)
+            Config.logMessage("Database                                  : "+Config.dbName,Config.LOG_LEVEL_SUMMARY);
 
         if (Config.outputDir != null)
             Config.logMessage("Output directory                          : "+Config.outputDir, Config.LOG_LEVEL_SUMMARY);
@@ -87,73 +96,7 @@ public class Extractor {
         }
     }
 
-    public static void generateCommand (String dbName, String command) throws Exception {
-
-        PrintStream ps;
-
-        numOfCommands++;
-        Config.logMessage("Command #"+numOfCommands+" : "+command, Config.LOG_LEVEL_ALL);
-
-        if (Config.outputDir != null && !outputFiles.containsKey(dbName) ) {
-            if (Config.outputMode == 0) {
-                ps = new PrintStream(new FileOutputStream(Config.outputDir + File.separator + dbName + ".js"), true);
-                ps.println("use " + dbName);
-            } else
-                ps = new PrintStream(new FileOutputStream(Config.outputDir + File.separator + dbName + ".json"), true);
-            outputFiles.put(dbName,ps);
-        } else if (Config.outputDir != null )
-            ps = outputFiles.get(dbName);
-        else {
-            ps = System.out;
-            if (!oldDbName.equals(dbName)) {
-                ps.println("use " + dbName);
-                oldDbName = dbName;
-            }
-        }
-
-        if (Config.outputMode == 0) {
-            if (Config.commandsLogging && Config.executionTracing == 0)
-                ps.println("console.log('Executing command : " + command + "')");
-            else if (Config.commandsLogging && Config.executionTracing != 0)
-                ps.println("console.log('Generating execution plan for : " + command + "')");
-
-            switch (Config.executionTracing) {
-                case 0:
-                    ps.println("db.runCommand(" + command + ")");
-                    break;
-                case 1:
-                    ps.println("try { db.runCommand({explain : " + command + ", verbosity : 'queryPlanner'}); } catch (e) {console.error(\"Execution plan generation does not support this statement. Details: https://www.mongodb.com/docs/manual/reference/command/explain/\")}");
-                    break;
-                case 2:
-                    ps.println("try { db.runCommand({explain : " + command + ", verbosity : 'executionStats'}); } catch (e) {console.error(\"Execution plan generation does not support this statement. Details: https://www.mongodb.com/docs/manual/reference/command/explain/\")}");
-                    break;
-                case 3:
-                    ps.println("try { db.runCommand({explain : " + command + ", verbosity : 'allPlansExecution'}); } catch (e) {console.error(\"Execution plan generation does not support this statement. Details: https://www.mongodb.com/docs/manual/reference/command/explain/\")}");
-            }
-
-            if (Config.outputDir != null)
-                ps.println("console.log('\\n\\n\\n')");
-        }
-        else {
-            switch (Config.executionTracing) {
-                case 0:
-                    ps.println(command);
-                    break;
-                case 1:
-                    ps.println("{explain : " + command + ", verbosity : 'queryPlanner'}");
-                    break;
-                case 2:
-                    ps.println("{explain : " + command + ", verbosity : 'executionStats'}");
-                    break;
-                case 3:
-                    ps.println("db.runCommand({explain : " + command + ", verbosity : 'allPlansExecution'}");
-            }
-        }
-
-    }
-
     public static void generateCommand(String dbName, JsonObject commandObject) throws Exception {
-
         PrintStream ps;
 
         commandObject.remove("lsid");
@@ -254,20 +197,57 @@ public class Extractor {
         }
     }
 
-    public static void extractProfile() throws Exception {
+    public static void extractProfileDump() throws Exception {
+        JsonObject  command;
+        String dbName = "";
+
         JsonParser parser = new JsonParser();
         JsonElement el    = parser.parse(inputFile);
         JsonArray   ar    = el.getAsJsonArray();
-        JsonObject  command;
-        String db = "";
+
+
         for (int i=0; i<ar.size(); i++) {
             numOfAllEntries++;
             command = ar.get(i).getAsJsonObject().get("command").getAsJsonObject();
             command.remove("$clusterTime");
             command.remove("lsid");
-            db = command.get("$db").getAsString();
-            generateCommand(db,command);
+            dbName = command.get("$db").getAsString();
+            generateCommand(dbName,command);
         }
+    }
+
+    public static void extractProfileDirectly() throws Exception {
+        MongoClient client;
+        MongoDatabase db;
+        String commandStr, dbName;
+        JsonObject command;
+
+        Config.logMessage("Connecting to the database",Config.LOG_LEVEL_SUMMARY);
+        MongoCollection<Document> profileCollection;
+
+
+        client = MongoClients.create(Config.connectString);
+        db     = client.getDatabase(Config.dbName);
+        Config.logMessage("Connected to the database",Config.LOG_LEVEL_SUMMARY);
+
+        profileCollection = db.getCollection("system.profile");
+        MongoCursor<Document> collectionCursor = profileCollection.
+                                                    find().
+                                                    iterator();
+
+        while (collectionCursor.hasNext()) {
+            numOfAllEntries++;
+            commandStr = collectionCursor.next().toJson();
+            command = JsonParser.parseString(commandStr).
+                    getAsJsonObject().
+                    get("command").
+                    getAsJsonObject();
+            command.remove("$clusterTime");
+            command.remove("lsid");
+            dbName = command.get("$db").getAsString();
+            generateCommand(Config.dbName,command);
+        }
+        client.close();
     }
 
     public static void main(String[] args) {
@@ -282,8 +262,9 @@ public class Extractor {
             switch (Config.inputFileFormat) {
                 case 0: extractLog();
                         break;
-                case 1: extractProfile();
+                case 1: extractProfileDump();
                         break;
+                case 2: extractProfileDirectly();
             }
             shutdown();
         } catch (Exception e)

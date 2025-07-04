@@ -35,8 +35,10 @@ public class Config {
     public static String dbName;
     public static int outputMode = 0; // 0 - mongosh script, default
                                       // 1 - json
-    public static int inputFileFormat = 0; // 0 - traditional MongoDB logfile
-                                           // 1 - Atlas
+    public static int inputFileFormat = 0; // 0 - Momngod log
+                                           // 1 - db.system.profile collection dump
+                                           // 2 - db.system.profile direct reads
+
     public static int executionTracing = 0; // 0 - not tracing
                                             // 1 - query planner
                                             // 2 - execution stats
@@ -145,6 +147,17 @@ public class Config {
             }
             else inputFileFormat = 0;
 
+            if (configObject.has("INPUT_CONNECT_STRING")) {
+                if (configObject.has("INPUT_FILE_FORMAT") || configObject.has("INPUT_FILE"))
+                    throw new Exception("If INPUT_CONNECT_STRING is set then INPUT_FILE and INPUT_FILE_FORMAT cannot be set");
+
+                if (configObject.has("DB_NAME"))
+                    dbName = configObject.getAsJsonPrimitive("DB_NAME").getAsString();
+                else throw new Exception("DB_NAME parameter is mandatory when INPUT_CONNECT_STRING is set.");
+
+                connectString = configObject.get("INPUT_CONNECT_STRING").getAsString();
+                inputFileFormat = 2;
+            }
 
             if (configObject.has("OUTPUT_MODE")) {
                 if ( configObject.getAsJsonPrimitive("OUTPUT_MODE").getAsString().equals("SCRIPT"))

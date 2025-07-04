@@ -29,7 +29,9 @@ See [LICENSE](https://github.com/oracle-devrel/technology-engineering/blob/main/
 1.MDBExtractor
   requirements:
   - Source MongoDB instance up and running
-  - Profiling enabled at the MongoDB instance level set by execution the following command
+  - Profiling at the MongoDB instance 
+     - to extract data from traditional Mongod log file, there is need to enable logging so called slow operations at the Mongod instance level. It can be done by executing the following command:
+     
      db.setProfilingLevel(0, -1)
   - The following configuration file $MR_CONFIG_DIR/MDBExtractConfig.json needs to be existing with the following parameters
 
