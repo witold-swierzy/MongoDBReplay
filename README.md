@@ -26,6 +26,8 @@ See [LICENSE](https://github.com/oracle-devrel/technology-engineering/blob/main/
 1. Generic requirements
    - MR_CONFIG_DIR variable has to be set to a directory, where configuration and log files are/will be stored
    - JDK 21 (it can be Oracle or OpenJDK)
+   - Oracle JDK can be downloaded from the following link: https://www.oracle.com/java/technologies/downloads/#java21
+   - OpenJDK is usually available in a Linux packates repository, but also can be downloaded and installed independly from the following link: https://openjdk.org/
 
 1.MDBExtractor
   requirements:
