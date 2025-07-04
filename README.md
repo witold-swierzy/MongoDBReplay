@@ -34,6 +34,7 @@ See [LICENSE](https://github.com/oracle-devrel/technology-engineering/blob/main/
      
      	db.setProfilingLevel(0, -1)
       - to extract data from db.system.profile collection or its dump there is need to enable traditional profiling, by executing the following command:
+      
         db.setProfilingLevel(2)
         
   - The following configuration file $MR_CONFIG_DIR/MDBExtractConfig.json needs to be existing with the following parameters
