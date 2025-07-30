@@ -35,7 +35,7 @@ public class Config {
     public static String dbName;
     public static int outputMode = 0; // 0 - mongosh script, default
                                       // 1 - json
-    public static int inputFileFormat = 0; // 0 - Momngod log
+    public static int inputFileFormat = 0; // 0 - Mongod log
                                            // 1 - db.system.profile collection dump
                                            // 2 - db.system.profile direct reads
 
