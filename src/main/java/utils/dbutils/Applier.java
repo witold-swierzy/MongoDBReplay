@@ -8,6 +8,7 @@ import com.mongodb.client.MongoDatabase;
 import org.bson.BsonDocument;
 import org.bson.Document;
 
+import javax.swing.*;
 import java.io.*;
 import java.time.LocalDateTime;
 
@@ -19,6 +20,7 @@ public class Applier {
     private static MongoClient client;
     private static MongoDatabase db;
     private static BufferedReader inputFile;
+    private static int interactivityLevel = 0;
 
     public static void printSettings(boolean footer) {
         if (!footer)
@@ -47,7 +49,10 @@ public class Applier {
         }
     }
 
-    public static void initialize() throws Exception  {
+    public static void initialize(String[] args) throws Exception  {
+            //if args.length = 1 and args[0].equals("-i") then
+            //    interactiveMode = true;
+
             Config.readConfiguration(Config.APPLY);
             printSettings(false);
             client = MongoClients.create(Config.connectString);
@@ -75,9 +80,17 @@ public class Applier {
         JsonObject commandJSON;
         BsonDocument commandBSON;
         Document commandResult;
+        boolean process = true;
 
         try {
-            initialize();
+            initialize(args);
+            if (Config.interactivityLevel != 0) {
+                process = Config.prompt("Do you want to continue (Y/N) ?");
+                if (!process) {
+                    shutdown();
+                    System.exit(0);
+                }
+            }
             while ((line = inputFile.readLine()) != null) {
                 numOfAllCommands++;
                 try {
@@ -91,9 +104,17 @@ public class Applier {
                     }
                     commandJSON.remove("$db");
                     commandBSON = BsonDocument.parse(commandJSON.toString());
-                    commandResult = db.runCommand(commandBSON);
-                    Config.logMessage("Result : "+commandResult.toString().substring(8),Config.LOG_LEVEL_ALL);
-                    numOfSucceses++;
+                    if (Config.interactivityLevel == 2) {
+                        System.out.println("The following command has been extracted : ");
+                        System.out.println(commandBSON.toString());
+                        process = Config.prompt("Do you want to execute it (Y/N) ?");
+                    }
+                    else process = true;
+                    if (process) {
+                        commandResult = db.runCommand(commandBSON);
+                        Config.logMessage("Result : " + commandResult.toString().substring(8), Config.LOG_LEVEL_ALL);
+                        numOfSucceses++;
+                    }
                 } catch(Exception e) {
                     numOfErrors++;
                     Config.logMessage("Error #"+numOfErrors+" : "+line, Config.LOG_LEVEL_ERRORS);

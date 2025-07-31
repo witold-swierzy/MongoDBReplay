@@ -2,10 +2,7 @@ package utils.dbutils;
 
 import com.google.gson.*;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.PrintStream;
-import java.io.Reader;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
@@ -43,6 +40,11 @@ public class Config {
                                             // 1 - query planner
                                             // 2 - execution stats
                                             // 3 - allPlansExecution
+
+    public static int interactivityLevel = 0; // 0 - silent mode
+                                              // 1 - asks for confirmation after displaying initial summary
+                                              // 2 - asks for confirmation after displaying summary and before applying every statement to a target system
+
     public static ManagingThread t = new ManagingThread();
     private static Reader reader;
     private static JsonObject configObject;
@@ -178,6 +180,8 @@ public class Config {
     }
 
     public static void readApplyConfiguration() {
+        String iLevel = "SILENT";
+
         try {
             if (configObject.has("CONNECT_STRING"))
                 connectString = configObject.getAsJsonPrimitive("CONNECT_STRING").getAsString();
@@ -187,6 +191,17 @@ public class Config {
             if (configObject.has("DB_NAME"))
                 dbName = configObject.getAsJsonPrimitive("DB_NAME").getAsString();
             else throw new Exception("DB_NAME parameter is mandatory.");
+
+            if (configObject.has("INTERACTIVITY_LEVEL")) {
+                iLevel = configObject.getAsJsonPrimitive("INTERACTIVITY_LEVEL").getAsString();
+                if (iLevel.equalsIgnoreCase("SILENT"))
+                    interactivityLevel = 0;
+                else if (iLevel.equalsIgnoreCase("BASIC"))
+                    interactivityLevel = 1;
+                else if (iLevel.equalsIgnoreCase("FULL"))
+                    interactivityLevel = 2;
+                else throw new Exception("INTERACTIVITY_LEVEL can be set to SILENT,BASIC or FULL only.");
+            }
 
             if (configObject.has("INPUT_FILE"))
                 inputFileName = configObject.getAsJsonPrimitive("INPUT_FILE").getAsString();
@@ -243,4 +258,20 @@ public class Config {
         if (level <= logLevel)
             logFile.println(message);
     }
+
+    public static boolean prompt(String text) throws Exception {
+        String answer = "";
+        BufferedReader r = new BufferedReader(
+                new InputStreamReader(System.in));
+        while ((!answer.equalsIgnoreCase("Y")) &&
+               (!answer.equalsIgnoreCase("N")))
+        {
+            System.out.println(text);
+            answer = r.readLine();
+        }
+        if ( answer.equalsIgnoreCase("Y") )
+            return true;
+        return false;
+    }
+
 }
